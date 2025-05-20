@@ -3,10 +3,14 @@ package springboot.java17.realworld.api.controller;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springboot.java17.realworld.api.dto.articleDtos.ArticleListDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
 import springboot.java17.realworld.service.ArticleServiceImpl;
 
 @RestController
@@ -31,5 +35,13 @@ public class ArticleController {
         ArticleListDto articleListDto = articleService.getAllArticles(queryParams);
 
         return ResponseEntity.ok(articleListDto);
+    }
+
+    @PostMapping()
+    public ResponseEntity<ArticleDto> createArticle(@RequestBody ArticleCreateDto dto){
+
+        ArticleDto articleDto = articleService.create(dto);
+
+        return ResponseEntity.ok(articleDto);
     }
 }

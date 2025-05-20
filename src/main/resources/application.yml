@@ -19,7 +19,17 @@ spring:
         format_sql: true
         show_sql: true
 
+  jackson:
+    # req
+    deserialization:
+      unwrap-root-value: true
+    # res
+#    serialization:
+#      wrap-root-value: true
+
+
 logging:
   level:
     org.hibernate.SQL: debug
   #  org.hibernate.type: trace
+

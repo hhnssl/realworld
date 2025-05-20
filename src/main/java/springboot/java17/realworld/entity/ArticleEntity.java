@@ -7,13 +7,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 
+@Builder
 @Entity
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "articles")
 public class ArticleEntity {
@@ -33,13 +41,13 @@ public class ArticleEntity {
 
     private String description;
 
-    private Boolean favorited;
+    private boolean favorited;
 
     private int favoritesCount;
 
     private String slug;
 
-    private String tagList;
+//    private List<String> tagList;
 
     private String title;
 
@@ -48,5 +56,21 @@ public class ArticleEntity {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+
+    public ArticleDto toDto(){
+        return ArticleDto.builder()
+            .slug(slug)
+            .title(title)
+            .description(description)
+            .body(body)
+//            .tagList(tagList)
+            .createdAt(createdAt)
+            .updatedAt(updatedAt)
+            .favorited(favorited)
+            .favoritesCount(favoritesCount)
+            .author(author)
+            .build();
+    }
 
 }
