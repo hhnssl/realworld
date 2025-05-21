@@ -13,4 +13,5 @@ public interface ArticleService {
 
     ArticleDto updateArticleBySlug(String slug, ArticleUpdateDto dto);
 
+    void deleteArticleBySlug(String slug);
 }

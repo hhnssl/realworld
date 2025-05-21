@@ -11,5 +11,6 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
     Optional<ArticleEntity> findBySlug(String slug);
 
+    void deleteBySlug(String slug);
 
 }

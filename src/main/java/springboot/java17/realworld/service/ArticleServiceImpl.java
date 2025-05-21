@@ -1,5 +1,6 @@
 package springboot.java17.realworld.service;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -53,5 +54,15 @@ public class ArticleServiceImpl implements ArticleService {
         article.setBody(dto.getBody() == null ? article.getBody() : dto.getBody());
 
         return articleRepository.save(article).toDto();
+    }
+
+    @Override
+    @Transactional
+    public void deleteArticleBySlug(String slug) {
+        articleRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+
+        // 삭제
+        articleRepository.deleteBySlug(slug);
     }
 }
