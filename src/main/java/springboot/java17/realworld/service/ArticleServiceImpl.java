@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
 import springboot.java17.realworld.entity.ArticleEntity;
@@ -38,4 +39,19 @@ public class ArticleServiceImpl implements ArticleService {
         return newArticle;
     }
 
+    @Override
+    public ArticleDto updateArticleBySlug(String slug, ArticleUpdateDto dto) {
+
+        // Todo: slug로 검색한 결과가 존재하지 않을 경우 예외 처리
+        ArticleEntity article = articleRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+
+        article.setSlug(dto.getTitle() == null ? article.getSlug() : dto.getTitle());
+        article.setTitle(dto.getTitle() == null ? article.getSlug() : dto.getTitle());
+        article.setDescription(
+            dto.getDescription() == null ? article.getDescription() : dto.getDescription());
+        article.setBody(dto.getBody() == null ? article.getBody() : dto.getBody());
+
+        return articleRepository.save(article).toDto();
+    }
 }

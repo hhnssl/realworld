@@ -60,7 +60,7 @@ public class ArticleEntity {
 
     public ArticleDto toDto(){
         return ArticleDto.builder()
-            .slug(slug)
+            .slug(title)
             .title(title)
             .description(description)
             .body(body)

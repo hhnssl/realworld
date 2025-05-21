@@ -9,5 +9,7 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
     List<ArticleEntity> findAll();
 
+    Optional<ArticleEntity> findBySlug(String slug);
+
 
 }

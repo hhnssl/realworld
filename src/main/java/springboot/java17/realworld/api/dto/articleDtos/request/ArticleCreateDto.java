@@ -2,18 +2,16 @@ package springboot.java17.realworld.api.dto.articleDtos.request;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotBlank.List;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import springboot.java17.realworld.entity.ArticleEntity;
 
 @Getter
-@Setter
-//@AllArgsConstructor
-//@NoArgsConstructor
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonRootName("article")
 public class ArticleCreateDto {
 
@@ -31,6 +29,7 @@ public class ArticleCreateDto {
     public ArticleEntity toEntity(){
         return ArticleEntity.builder()
             .title(title)
+            .slug(title)
             .description(description)
             .body(body)
             .build();

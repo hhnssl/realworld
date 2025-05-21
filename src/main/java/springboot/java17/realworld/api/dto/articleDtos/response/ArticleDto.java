@@ -1,15 +1,15 @@
 package springboot.java17.realworld.api.dto.articleDtos.response;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import java.time.LocalDateTime;
-import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import springboot.java17.realworld.entity.ArticleEntity;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
-@JsonRootName("article")
+@NoArgsConstructor
+@AllArgsConstructor
 public class ArticleDto {
     private String slug;
     private String title;
