@@ -26,12 +26,10 @@ import springboot.java17.realworld.service.ArticleServiceImpl;
 @RequestMapping("/api/articles")
 public class ArticleController {
 
-//    private final ArticleServiceImpl articleService;
-
     private final ArticleService articleService;
     private final ObjectMapper objectMapper;
 
-    public ArticleController(ArticleServiceImpl articleService, ObjectMapper objectMapper) {
+    public ArticleController(ArticleService articleService, ObjectMapper objectMapper) {
         this.articleService = articleService;
         this.objectMapper = objectMapper;
     }
