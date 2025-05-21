@@ -19,13 +19,16 @@ import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
+import springboot.java17.realworld.service.ArticleService;
 import springboot.java17.realworld.service.ArticleServiceImpl;
 
 @RestController
 @RequestMapping("/api/articles")
 public class ArticleController {
 
-    private final ArticleServiceImpl articleService;
+//    private final ArticleServiceImpl articleService;
+
+    private final ArticleService articleService;
     private final ObjectMapper objectMapper;
 
     public ArticleController(ArticleServiceImpl articleService, ObjectMapper objectMapper) {
@@ -38,6 +41,15 @@ public class ArticleController {
     public ResponseEntity<String> test() {
         return ResponseEntity.ok("ok");
     }
+
+    @GetMapping("/{slug}")
+    public ResponseEntity<ArticleDto> getArticle(@PathVariable String slug){
+
+        ArticleDto articleDto = articleService.getArticleBySlug(slug);
+
+        return ResponseEntity.ok(articleDto);
+    }
+
 
     @GetMapping()
     public ResponseEntity<ArticleListDto> listArticles(

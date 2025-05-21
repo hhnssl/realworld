@@ -7,6 +7,9 @@ import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
 
 public interface ArticleService {
+
+    ArticleDto getArticleBySlug(String slug);
+
     ArticleListDto getAllArticles(Map<String, String> queryParams);
 
     ArticleDto create(ArticleCreateDto dto);

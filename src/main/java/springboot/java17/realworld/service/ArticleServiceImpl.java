@@ -20,6 +20,14 @@ public class ArticleServiceImpl implements ArticleService {
         this.articleRepository = articleRepository;
     }
 
+
+    @Override
+    public ArticleDto getArticleBySlug(String slug) {
+
+        return articleRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음")).toDto();
+    }
+
     @Override
     // Todo: Map -> QeuryParam 객체 생성
     public ArticleListDto getAllArticles(Map<String, String> queryParams) {
