@@ -9,6 +9,8 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
     List<ArticleEntity> findAll();
 
+    List<ArticleEntity> findAllByOrderByCreatedAtDesc();
+
     Optional<ArticleEntity> findBySlug(String slug);
 
     void deleteBySlug(String slug);

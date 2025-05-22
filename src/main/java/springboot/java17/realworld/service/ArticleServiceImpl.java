@@ -32,7 +32,7 @@ public class ArticleServiceImpl implements ArticleService {
     // Todo: Map -> QeuryParam 객체 생성
     public ArticleListDto getAllArticles(Map<String, String> queryParams) {
 
-        List<ArticleDto> articleDtoList = articleRepository.findAll()
+        List<ArticleDto> articleDtoList = articleRepository.findAllByOrderByCreatedAtDesc()
             .stream()
             .map(ArticleEntity::toDto)
             .toList();
