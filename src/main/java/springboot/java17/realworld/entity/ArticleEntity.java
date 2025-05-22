@@ -1,6 +1,7 @@
 package springboot.java17.realworld.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -9,21 +10,22 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 
 @Builder
-@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "articles")
+@EntityListeners(AuditingEntityListener.class)
+@Entity
 public class ArticleEntity {
 // Todo: @NotNull 추가
     
