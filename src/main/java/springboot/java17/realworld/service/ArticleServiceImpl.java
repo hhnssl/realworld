@@ -29,13 +29,20 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    // Todo: Map -> QeuryParam 객체 생성
-    public ArticleListDto getAllArticles(Map<String, String> queryParams) {
+    public ArticleListDto getAllArticles(String author) {
+        List<ArticleDto> articleDtoList;
 
-        List<ArticleDto> articleDtoList = articleRepository.findAllByOrderByCreatedAtDesc()
-            .stream()
-            .map(ArticleEntity::toDto)
-            .toList();
+        if (!author.isEmpty()) {
+            articleDtoList = articleRepository.findAllByAuthorOrderByCreatedAtDesc(author)
+                .stream()
+                .map(ArticleEntity::toDto)
+                .toList();
+        } else {
+            articleDtoList = articleRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(ArticleEntity::toDto)
+                .toList();
+        }
 
         return new ArticleListDto(articleDtoList, articleDtoList.size());
     }

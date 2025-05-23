@@ -10,7 +10,7 @@ public interface ArticleService {
 
     ArticleDto getArticleBySlug(String slug);
 
-    ArticleListDto getAllArticles(Map<String, String> queryParams);
+    ArticleListDto getAllArticles(String author);
 
     ArticleDto create(ArticleCreateDto dto);
 

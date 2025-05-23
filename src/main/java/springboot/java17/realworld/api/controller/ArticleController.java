@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,6 @@ import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
 import springboot.java17.realworld.service.ArticleService;
-import springboot.java17.realworld.service.ArticleServiceImpl;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -51,9 +49,10 @@ public class ArticleController {
 
     @GetMapping()
     public ResponseEntity<ArticleListDto> listArticles(
-        @RequestParam(required = false) Map<String, String> queryParams) {
+        @RequestParam(required = false, defaultValue = "") String author
+    ) {
 
-        ArticleListDto articleListDto = articleService.getAllArticles(queryParams);
+        ArticleListDto articleListDto = articleService.getAllArticles(author);
 
         return ResponseEntity.ok(articleListDto);
     }
