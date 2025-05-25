@@ -39,7 +39,11 @@ public class ArticleServiceImpl implements ArticleService {
                 .stream()
                 .map(ArticleEntity::toDto)
                 .toList();
-        } else {
+        } else if (!tag.isEmpty()) {
+            articleDtoList = articleRepository.findAllByTagList_NameOrderByCreatedAtDesc(tag)
+                .stream()
+                .map(ArticleEntity::toDto)
+                .toList();        } else {
             articleDtoList = articleRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(ArticleEntity::toDto)
