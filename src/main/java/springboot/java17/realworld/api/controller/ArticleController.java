@@ -49,10 +49,11 @@ public class ArticleController {
 
     @GetMapping()
     public ResponseEntity<ArticleListDto> listArticles(
-        @RequestParam(required = false, defaultValue = "") String author
+        @RequestParam(required = false, defaultValue = "") String author,
+        @RequestParam(required = false, defaultValue = "") String tag
     ) {
 
-        ArticleListDto articleListDto = articleService.getAllArticles(author);
+        ArticleListDto articleListDto = articleService.getAllArticles(author, tag);
 
         return ResponseEntity.ok(articleListDto);
     }

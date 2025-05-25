@@ -10,7 +10,7 @@ public interface ArticleService {
 
     ArticleDto getArticleBySlug(String slug);
 
-    ArticleListDto getAllArticles(String author);
+    ArticleListDto getAllArticles(String author, String tag);
 
     ArticleDto create(ArticleCreateDto dto);
 

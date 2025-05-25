@@ -1,12 +1,17 @@
 package springboot.java17.realworld.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,13 +48,14 @@ public class ArticleEntity {
 
     private String description;
 
-    private boolean favorited;
+    private boolean favorited = false;
 
     private int favoritesCount;
 
     private String slug;
 
-//    private List<String> tagList;
+    @OneToMany(cascade = CascadeType.PERSIST)
+    private Set<TagEntity> tagList = new HashSet<>();
 
     private String title;
 
@@ -66,7 +72,9 @@ public class ArticleEntity {
             .title(title)
             .description(description)
             .body(body)
-//            .tagList(tagList)
+            .tagList(tagList.stream()
+                .map(TagEntity::getName) // getName() 메서드로 String 추출
+                .collect(Collectors.toList()))
             .createdAt(createdAt)
             .updatedAt(updatedAt)
             .favorited(favorited)
