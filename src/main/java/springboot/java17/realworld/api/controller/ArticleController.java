@@ -1,9 +1,5 @@
 package springboot.java17.realworld.api.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
-import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.service.ArticleService;
 
 @RestController
@@ -25,13 +21,10 @@ import springboot.java17.realworld.service.ArticleService;
 public class ArticleController {
 
     private final ArticleService articleService;
-    private final ObjectMapper objectMapper;
 
-    public ArticleController(ArticleService articleService, ObjectMapper objectMapper) {
+    public ArticleController(ArticleService articleService) {
         this.articleService = articleService;
-        this.objectMapper = objectMapper;
     }
-
 
     @GetMapping("/test")
     public ResponseEntity<String> test() {
@@ -39,50 +32,41 @@ public class ArticleController {
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<ArticleDto> getArticle(@PathVariable String slug){
-
-        ArticleDto articleDto = articleService.getArticleBySlug(slug);
+    public ResponseEntity<SingleArticleResponseDto> getArticle(@PathVariable("slug") String slug) {
+        SingleArticleResponseDto articleDto = articleService.getArticleBySlug(slug);
 
         return ResponseEntity.ok(articleDto);
     }
 
+    @GetMapping("")
+    public ResponseEntity<MultipleArticlesResponseDto> listArticles(
+        @RequestParam(name = "author", required = false, defaultValue = "") String author,
+        @RequestParam(name = "tag", required = false, defaultValue = "") String tag) {
 
-    @GetMapping()
-    public ResponseEntity<ArticleListDto> listArticles(
-        @RequestParam(required = false, defaultValue = "") String author,
-        @RequestParam(required = false, defaultValue = "") String tag
-    ) {
-
-        ArticleListDto articleListDto = articleService.getAllArticles(author, tag);
+        MultipleArticlesResponseDto articleListDto = articleService.getAllArticles(author, tag);
 
         return ResponseEntity.ok(articleListDto);
     }
 
-    @PostMapping()
-    public ResponseEntity<String> createArticle(@RequestBody ArticleCreateDto dto)
-        throws JsonProcessingException {
+    @PostMapping("")
+    public ResponseEntity<SingleArticleResponseDto> createArticle(@RequestBody() NewArticleRequestDto dto) {
 
-        ArticleDto articleDto = articleService.create(dto);
+        SingleArticleResponseDto articleDto = articleService.create(dto);
 
-        Map<String, ArticleDto> wrapper = new HashMap<>();
-        wrapper.put("article", articleDto);
-
-        return ResponseEntity.ok()
-            .header("Content-Type", "application/json")
-            .body(objectMapper.writeValueAsString(wrapper));
+        return ResponseEntity.ok(articleDto);
     }
 
     @PutMapping("/{slug}")
-    public ResponseEntity<ArticleDto> updateArticle(@PathVariable String slug,
-        @RequestBody ArticleUpdateDto dto) {
+    public ResponseEntity<SingleArticleResponseDto> updateArticle(@PathVariable("slug") String slug,
+        @RequestBody() UpdateArticleRequestDto dto) {
 
-        ArticleDto articleDto = articleService.updateArticleBySlug(slug, dto);
+        SingleArticleResponseDto articleDto = articleService.updateArticleBySlug(slug, dto);
 
         return ResponseEntity.ok(articleDto);
     }
 
     @DeleteMapping("/{slug}")
-    public ResponseEntity<Void> deleteArticle(@PathVariable String slug){
+    public ResponseEntity<Void> deleteArticle(@PathVariable("slug") String slug) {
 
         articleService.deleteArticleBySlug(slug);
 

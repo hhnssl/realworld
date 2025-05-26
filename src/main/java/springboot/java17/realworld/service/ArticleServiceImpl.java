@@ -3,10 +3,11 @@ package springboot.java17.realworld.service;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.entity.ArticleEntity;
 import springboot.java17.realworld.repository.ArticleRepository;
 import springboot.java17.realworld.repository.TagRepository;
@@ -22,48 +23,48 @@ public class ArticleServiceImpl implements ArticleService {
         this.tagRepository = tagRepository;
     }
 
-
     @Override
-    public ArticleDto getArticleBySlug(String slug) {
+    public SingleArticleResponseDto getArticleBySlug(String slug) {
 
-        return articleRepository.findBySlug(slug)
-            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음")).toDto();
+        ArticleEntity article = articleRepository.findBySlug(slug)
+            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+
+        return SingleArticleResponseDto.fromEntity(article);
     }
 
     @Override
-    public ArticleListDto getAllArticles(String author, String tag) {
-        List<ArticleDto> articleDtoList;
+    public MultipleArticlesResponseDto getAllArticles(String author, String tag) {
+        List<ArticleEntity> articleList;
 
         if (!author.isEmpty()) {
-            articleDtoList = articleRepository.findAllByAuthorOrderByCreatedAtDesc(author)
-                .stream()
-                .map(ArticleEntity::toDto)
-                .toList();
+            articleList = articleRepository.findAllByAuthorOrderByCreatedAtDesc(author);
         } else if (!tag.isEmpty()) {
-            articleDtoList = articleRepository.findAllByTagList_NameOrderByCreatedAtDesc(tag)
-                .stream()
-                .map(ArticleEntity::toDto)
-                .toList();        } else {
-            articleDtoList = articleRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(ArticleEntity::toDto)
-                .toList();
+            articleList = articleRepository.findAllByTagList_NameOrderByCreatedAtDesc(tag);
+        } else {
+            articleList = articleRepository.findAllByOrderByCreatedAtDesc();
         }
 
-        return new ArticleListDto(articleDtoList, articleDtoList.size());
+        List<ArticleDto> articleDtoList = articleList.stream()
+            .map(ArticleDto::fromEntity)
+            .toList();
+
+        return MultipleArticlesResponseDto.builder()
+            .articles(articleDtoList)
+            .articlesCount(articleDtoList.size())
+            .build();
     }
 
     @Override
-    public ArticleDto create(ArticleCreateDto dto) {
+    public SingleArticleResponseDto create(NewArticleRequestDto dto) {
+        ArticleEntity article = dto.toEntity();
 
-        ArticleDto newArticle = articleRepository.save(dto.toEntity())
-            .toDto();
+        articleRepository.save(article);
 
-        return newArticle;
+        return SingleArticleResponseDto.fromEntity(article);
     }
 
     @Override
-    public ArticleDto updateArticleBySlug(String slug, ArticleUpdateDto dto) {
+    public SingleArticleResponseDto updateArticleBySlug(String slug, UpdateArticleRequestDto dto) {
 
         // Todo: slug로 검색한 결과가 존재하지 않을 경우 예외 처리
         ArticleEntity article = articleRepository.findBySlug(slug)
@@ -75,17 +76,18 @@ public class ArticleServiceImpl implements ArticleService {
             dto.getDescription() == null ? article.getDescription() : dto.getDescription());
         article.setBody(dto.getBody() == null ? article.getBody() : dto.getBody());
 
-        return articleRepository.save(article)
-            .toDto();
+        articleRepository.save(article);
+
+        return SingleArticleResponseDto.fromEntity(article);
     }
 
     @Override
     @Transactional
     public void deleteArticleBySlug(String slug) {
-        articleRepository.findBySlug(slug)
+        ArticleEntity entity = articleRepository.findBySlug(slug)
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
         // 삭제
-        articleRepository.deleteBySlug(slug);
+        articleRepository.deleteById(entity.getId());
     }
 }

@@ -11,7 +11,6 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +20,6 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 
 @Builder
 @Getter
@@ -64,23 +62,4 @@ public class ArticleEntity {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-
-    public ArticleDto toDto(){
-        return ArticleDto.builder()
-            .slug(title)
-            .title(title)
-            .description(description)
-            .body(body)
-            .tagList(tagList.stream()
-                .map(TagEntity::getName) // getName() 메서드로 String 추출
-                .collect(Collectors.toList()))
-            .createdAt(createdAt)
-            .updatedAt(updatedAt)
-            .favorited(favorited)
-            .favoritesCount(favoritesCount)
-            .author(author)
-            .build();
-    }
-
 }

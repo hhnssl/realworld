@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonRootName("article")
-public class ArticleUpdateDto {
+public class UpdateArticleRequestDto {
     private String title;
 
     private String description;

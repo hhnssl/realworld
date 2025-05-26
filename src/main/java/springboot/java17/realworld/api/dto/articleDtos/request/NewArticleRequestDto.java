@@ -17,7 +17,7 @@ import springboot.java17.realworld.entity.TagEntity;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonRootName("article")
-public class ArticleCreateDto {
+public class NewArticleRequestDto {
 
     @NotBlank
     private String title;
@@ -30,7 +30,7 @@ public class ArticleCreateDto {
 
     private List<String> tagList = new ArrayList<>();
 
-    public ArticleEntity toEntity(){
+    public ArticleEntity toEntity() {
         return ArticleEntity.builder()
             .title(title)
             .slug(title)
@@ -42,8 +42,4 @@ public class ArticleCreateDto {
             )
             .build();
     }
-
-
-
-
 }

@@ -1,20 +1,19 @@
 package springboot.java17.realworld.service;
 
-import java.util.Map;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleCreateDto;
-import springboot.java17.realworld.api.dto.articleDtos.request.ArticleUpdateDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleListDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 
 public interface ArticleService {
 
-    ArticleDto getArticleBySlug(String slug);
+    SingleArticleResponseDto getArticleBySlug(String slug);
 
-    ArticleListDto getAllArticles(String author, String tag);
+    MultipleArticlesResponseDto getAllArticles(String author, String tag);
 
-    ArticleDto create(ArticleCreateDto dto);
+    SingleArticleResponseDto create(NewArticleRequestDto dto);
 
-    ArticleDto updateArticleBySlug(String slug, ArticleUpdateDto dto);
+    SingleArticleResponseDto updateArticleBySlug(String slug, UpdateArticleRequestDto dto);
 
     void deleteArticleBySlug(String slug);
 }

@@ -7,11 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import springboot.java17.realworld.entity.ArticleEntity;
 import springboot.java17.realworld.entity.TagEntity;
 
 @Getter
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArticleDto {
@@ -29,20 +31,22 @@ public class ArticleDto {
 
     private List<String> tagList;
 
-    public ArticleDto(ArticleEntity entity) {
-        this.slug = entity.getSlug();
-        this.title = entity.getTitle();
-        this.description = entity.getDescription();
-        this.body = entity.getBody();
+    public static ArticleDto fromEntity(ArticleEntity article) {
+        ArticleDto dto = ArticleDto.builder()
+                .slug(article.getSlug())
+                .title(article.getTitle())
+                .description(article.getDescription())
+                .body(article.getBody())
+                .author(article.getAuthor())
+                .createdAt(article.getCreatedAt())
+                .updatedAt(article.getUpdatedAt())
+                .favorited(article.isFavorited())
+                .favoritesCount(article.getFavoritesCount())
+                .tagList(article.getTagList().stream()
+                        .map(TagEntity::getName)
+                        .collect(Collectors.toList()))
+                .build();
 
-        this.author = entity.getAuthor();
-        this.createdAt = entity.getCreatedAt();
-        this.updatedAt = entity.getUpdatedAt();
-        this.favorited = entity.isFavorited();
-        this.favoritesCount = entity.getFavoritesCount();
-
-        this.tagList = entity.getTagList().stream()
-            .map(TagEntity::getName)
-            .collect(Collectors.toList());
+        return dto;
     }
 }
