@@ -6,6 +6,8 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
@@ -36,30 +38,25 @@ public class ArticleEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Todo: 타입 변경
-    private String author;
-
-    private String body;
-
-    // Todo: 타입 변경
-    private String comments;
-
-    private String description;
-
-    private boolean favorited = false;
-
-    private int favoritesCount;
+    @ManyToOne
+    @JoinColumn(name="user_id")
+    private UserEntity user;
 
     private String slug;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
-    private Set<TagEntity> tagList = new HashSet<>();
-
     private String title;
+
+    private String description;
+
+    private String body;
+
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @OneToMany(cascade = CascadeType.PERSIST)
+    private Set<TagEntity> tagList = new HashSet<>();
 }

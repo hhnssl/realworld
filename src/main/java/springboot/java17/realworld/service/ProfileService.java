@@ -1,0 +1,9 @@
+package springboot.java17.realworld.service;
+
+import springboot.java17.realworld.api.dto.profileDtos.response.ProfileResponseDto;
+
+public interface ProfileService {
+
+    ProfileResponseDto getProfileByUsername(String username);
+
+}

@@ -9,8 +9,10 @@ import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.entity.ArticleEntity;
+import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.ArticleRepository;
 import springboot.java17.realworld.repository.TagRepository;
+import springboot.java17.realworld.repository.UserRepository;
 
 @Service
 public class ArticleServiceImpl implements ArticleService {
@@ -18,9 +20,20 @@ public class ArticleServiceImpl implements ArticleService {
     private final ArticleRepository articleRepository;
     private final TagRepository tagRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, TagRepository tagRepository) {
+    private final UserRepository userRepository;
+
+    // Todo: Auth 구현 후 삭제
+    UserEntity testUSer = UserEntity.builder()
+        .email("user1@gmail.com")
+        .username("user1")
+        .password("password")
+        .build();
+
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, TagRepository tagRepository,UserRepository userRepository) {
         this.articleRepository = articleRepository;
         this.tagRepository = tagRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -37,7 +50,10 @@ public class ArticleServiceImpl implements ArticleService {
         List<ArticleEntity> articleList;
 
         if (!author.isEmpty()) {
-            articleList = articleRepository.findAllByAuthorOrderByCreatedAtDesc(author);
+            // Todo
+            UserEntity user = userRepository.findByUsername(author).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+
+            articleList = articleRepository.findAllByUser(user);
         } else if (!tag.isEmpty()) {
             articleList = articleRepository.findAllByTagList_NameOrderByCreatedAtDesc(tag);
         } else {
@@ -57,6 +73,11 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public SingleArticleResponseDto create(NewArticleRequestDto dto) {
         ArticleEntity article = dto.toEntity();
+
+        // Todo: 현재 로그인한 유저의 정보로 변경할 것
+        userRepository.save(testUSer);
+
+        article.setUser(testUSer);
 
         articleRepository.save(article);
 

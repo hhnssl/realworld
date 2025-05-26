@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import springboot.java17.realworld.entity.ArticleEntity;
+import springboot.java17.realworld.entity.UserEntity;
 
 public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
@@ -11,9 +12,9 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
     List<ArticleEntity> findAll();
 
-    List<ArticleEntity> findAllByOrderByCreatedAtDesc();
+    List<ArticleEntity> findAllByUser(UserEntity userEntityr);
 
-    List<ArticleEntity> findAllByAuthorOrderByCreatedAtDesc(String author);
+    List<ArticleEntity> findAllByOrderByCreatedAtDesc();
 
     List<ArticleEntity> findAllByTagList_NameOrderByCreatedAtDesc(String tagName);
 
