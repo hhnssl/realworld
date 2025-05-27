@@ -6,4 +6,6 @@ public interface ProfileService {
 
     ProfileResponseDto getProfileByUsername(String username);
 
+    ProfileResponseDto followProfileByUsername(String username);
+
 }
