@@ -23,4 +23,12 @@ public class FollowServiceImpl implements FollowService{
 
         followRepository.save(followRelation);
     }
+
+    @Override
+    public void unfollowUser(UserEntity me, UserEntity followingUser) {
+        FollowEntity followEntity = followRepository.findByUserAndFollowing(me, followingUser)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결과입니다."));
+
+        followRepository.deleteById(followEntity.getId());
+    }
 }

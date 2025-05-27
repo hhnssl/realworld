@@ -1,6 +1,7 @@
 package springboot.java17.realworld.api.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,4 +35,11 @@ public class ProfileController {
         return ResponseEntity.ok(profileDto);
     }
 
+    @DeleteMapping("/{username}/follow")
+    public ResponseEntity<Void> unfollowUser(@PathVariable("username")String username){
+
+        profileService.unfollowProfileByUsername(username);
+
+        return ResponseEntity.noContent().build();
+    }
 }

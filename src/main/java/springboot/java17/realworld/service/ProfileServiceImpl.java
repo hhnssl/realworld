@@ -42,4 +42,14 @@ public class ProfileServiceImpl implements ProfileService {
 
         return ProfileResponseDto.fromEntity(followingUser);
     }
+
+    @Override
+    public ProfileResponseDto unfollowProfileByUsername(String username) {
+        UserEntity followingUser = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+
+        followService.unfollowUser(followingTestUser, followingUser);
+
+        return ProfileResponseDto.fromEntity(followingUser);
+    }
 }

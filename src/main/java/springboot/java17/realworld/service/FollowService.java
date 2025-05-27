@@ -6,4 +6,6 @@ public interface FollowService {
 
     void followUser(UserEntity me, UserEntity followingUser);
 
+    void unfollowUser(UserEntity me, UserEntity followingUser);
+
 }

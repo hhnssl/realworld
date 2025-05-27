@@ -8,4 +8,6 @@ public interface ProfileService {
 
     ProfileResponseDto followProfileByUsername(String username);
 
+    ProfileResponseDto unfollowProfileByUsername(String username);
+
 }
