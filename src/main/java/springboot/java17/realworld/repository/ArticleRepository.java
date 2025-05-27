@@ -12,7 +12,7 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
     List<ArticleEntity> findAll();
 
-    List<ArticleEntity> findAllByUser(UserEntity userEntityr);
+    List<ArticleEntity> findAllByUser(UserEntity userEntity);
 
     List<ArticleEntity> findAllByOrderByCreatedAtDesc();
 

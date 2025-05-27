@@ -73,4 +73,11 @@ public class ArticleController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/feed")
+    public ResponseEntity<MultipleArticlesResponseDto> feedArticles(){
+
+        MultipleArticlesResponseDto articleListDto = articleService.getFeedArticles();
+
+        return ResponseEntity.ok(articleListDto);
+    }
 }

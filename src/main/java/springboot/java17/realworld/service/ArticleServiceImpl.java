@@ -1,7 +1,9 @@
 package springboot.java17.realworld.service;
 
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
@@ -9,6 +11,7 @@ import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.entity.ArticleEntity;
+import springboot.java17.realworld.entity.FollowEntity;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.ArticleRepository;
 import springboot.java17.realworld.repository.TagRepository;
@@ -19,8 +22,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     private final ArticleRepository articleRepository;
     private final TagRepository tagRepository;
-
     private final UserRepository userRepository;
+    private final FollowService followService;
 
     // Todo: Auth 구현 후 삭제
     UserEntity testUSer = UserEntity.builder()
@@ -30,10 +33,12 @@ public class ArticleServiceImpl implements ArticleService {
         .build();
 
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, TagRepository tagRepository,UserRepository userRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, TagRepository tagRepository,
+        UserRepository userRepository, FollowService followService) {
         this.articleRepository = articleRepository;
         this.tagRepository = tagRepository;
         this.userRepository = userRepository;
+        this.followService = followService;
     }
 
     @Override
@@ -51,7 +56,8 @@ public class ArticleServiceImpl implements ArticleService {
 
         if (!author.isEmpty()) {
             // Todo
-            UserEntity user = userRepository.findByUsername(author).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+            UserEntity user = userRepository.findByUsername(author)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
 
             articleList = articleRepository.findAllByUser(user);
         } else if (!tag.isEmpty()) {
@@ -110,5 +116,28 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 삭제
         articleRepository.deleteById(entity.getId());
+    }
+
+    @Override
+    public MultipleArticlesResponseDto getFeedArticles() {
+        UserEntity me = userRepository.findByUsername("dataUser")
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        // me가 팔로우하고 있는 목록
+        List<FollowEntity> followings = followService.getFollowingList(me);
+
+        List<List<ArticleEntity>> obj = followings.stream()
+            .map(item -> articleRepository.findAllByUser(item.getFollowing()))
+            .toList();
+
+        List<ArticleDto> articleDtoList = obj.stream()
+            .flatMap(List::stream)
+            .map(ArticleDto::fromEntity)
+            .collect(Collectors.toList());
+
+        return MultipleArticlesResponseDto.builder()
+            .articles(articleDtoList)
+            .articlesCount(articleDtoList.size())
+            .build();
     }
 }

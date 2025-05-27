@@ -1,5 +1,6 @@
 package springboot.java17.realworld.service;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.entity.FollowEntity;
 import springboot.java17.realworld.entity.UserEntity;
@@ -30,5 +31,13 @@ public class FollowServiceImpl implements FollowService{
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결과입니다."));
 
         followRepository.deleteById(followEntity.getId());
+    }
+
+    @Override
+    public List<FollowEntity> getFollowingList(UserEntity me) {
+
+        List<FollowEntity> followingList = followRepository.findAllByUser(me);
+
+        return followingList;
     }
 }
