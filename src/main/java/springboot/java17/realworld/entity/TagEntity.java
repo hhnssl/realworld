@@ -4,7 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +30,13 @@ public class TagEntity {
 
     private String name;
 
-    public TagEntity(String tagName){
+    @OneToMany(mappedBy = "tag")
+    private List<ArticleTag> articleTagList = new ArrayList<>();
+
+
+    public TagEntity(String tagName) {
         this.name = tagName;
     }
+
+
 }

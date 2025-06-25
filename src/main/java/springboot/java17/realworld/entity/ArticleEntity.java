@@ -1,6 +1,5 @@
 package springboot.java17.realworld.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -11,8 +10,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,13 +32,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 public class ArticleEntity {
 // Todo: @NotNull 추가
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="user_id")
+    @JoinColumn(name = "user_id")
     private UserEntity user;
 
     private String slug;
@@ -57,6 +56,6 @@ public class ArticleEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
-    private Set<TagEntity> tagList = new HashSet<>();
+    @OneToMany(mappedBy = "article")
+    private List<ArticleTag> articleTagList = new ArrayList<>();
 }

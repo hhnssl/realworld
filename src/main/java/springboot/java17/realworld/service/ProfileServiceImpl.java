@@ -9,7 +9,6 @@ import springboot.java17.realworld.repository.UserRepository;
 public class ProfileServiceImpl implements ProfileService {
 
     private final UserRepository userRepository;
-    private final FollowService followService;
 
     /* Authentication 구현 후 삭제*/
     UserEntity followingTestUser = UserEntity.builder()
@@ -19,9 +18,8 @@ public class ProfileServiceImpl implements ProfileService {
         .build();
 
     /**/
-    public ProfileServiceImpl(UserRepository userRepository, FollowService followService) {
+    public ProfileServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.followService = followService;
     }
 
     @Override
@@ -38,7 +36,6 @@ public class ProfileServiceImpl implements ProfileService {
         UserEntity followingUser = userRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
 
-        followService.followUser(followingTestUser, followingUser);
 
         return ProfileResponseDto.fromEntity(followingUser);
     }
@@ -48,7 +45,6 @@ public class ProfileServiceImpl implements ProfileService {
         UserEntity followingUser = userRepository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
 
-        followService.unfollowUser(followingTestUser, followingUser);
 
         return ProfileResponseDto.fromEntity(followingUser);
     }

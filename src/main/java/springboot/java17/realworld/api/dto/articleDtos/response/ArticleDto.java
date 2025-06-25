@@ -32,18 +32,18 @@ public class ArticleDto {
 
     private List<String> tagList;
 
-    public static ArticleDto fromEntity(ArticleEntity entity) {
+    public static ArticleDto fromEntity(ArticleEntity article, List<TagEntity> tagList) {
         ArticleDto dto = ArticleDto.builder()
-                .slug(entity.getSlug())
-                .title(entity.getTitle())
-                .description(entity.getDescription())
-                .body(entity.getBody())
-                .author(ProfileDto.fromEntity(entity.getUser()))
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .slug(article.getSlug())
+                .title(article.getTitle())
+                .description(article.getDescription())
+                .body(article.getBody())
+                .author(ProfileDto.fromEntity(article.getUser()))
+                .createdAt(article.getCreatedAt())
+                .updatedAt(article.getUpdatedAt())
                 .favorited(null) //Todo
                 .favoritesCount(0) //Todo
-                .tagList(entity.getTagList().stream()
+                .tagList(tagList.stream()
                         .map(TagEntity::getName)
                         .collect(Collectors.toList()))
                 .build();

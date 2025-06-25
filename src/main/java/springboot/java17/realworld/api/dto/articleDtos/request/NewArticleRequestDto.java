@@ -36,10 +36,6 @@ public class NewArticleRequestDto {
             .slug(title)
             .description(description)
             .body(body)
-            .tagList(tagList.stream()
-                .map(name -> new TagEntity(name))
-                .collect(Collectors.toSet())
-            )
             .build();
     }
 }
