@@ -153,10 +153,15 @@ public class ArticleServiceImpl implements ArticleService {
 
         articleRepository.save(article);
 
-//        return SingleArticleResponseDto.fromEntity(article);
-        return null;
-    }
+        List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
+        List<TagEntity> tags = new ArrayList<>();
+        for (ArticleTag articleTag : articleTags) {
+            tags.add(articleTag.getTag());
+        }
 
+
+        return SingleArticleResponseDto.fromEntity(article, tags);
+    }
     @Override
     @Transactional
     public void deleteArticleBySlug(String slug) {
