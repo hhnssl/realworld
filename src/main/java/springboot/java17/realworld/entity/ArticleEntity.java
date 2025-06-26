@@ -56,6 +56,7 @@ public class ArticleEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "article")
-    private List<ArticleTag> articleTagList = new ArrayList<>();
+    // TAg를 검색하여 해당 tag와 관련된 ARticleTaglist 상세 정보를 확인하는 것이 필요할 경우 주석 해제하여 양방향 매핑 설정
+//    @OneToMany(mappedBy = "article")
+//    private List<ArticleTag> articleTagList = new ArrayList<>();
 }

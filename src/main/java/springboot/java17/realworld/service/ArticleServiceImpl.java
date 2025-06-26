@@ -1,6 +1,7 @@
 package springboot.java17.realworld.service;
 
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -49,9 +50,16 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleEntity article = articleRepository.findBySlug(slug)
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
+        List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
 
-//        return SingleArticleResponseDto.fromEntity(article, tags);
-        return null;
+        List<TagEntity> tags = new ArrayList<>();
+
+        for(ArticleTag articleTag: articleTags){
+            tags.add(articleTag.getTag());
+        }
+
+
+        return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
     @Override
@@ -100,17 +108,16 @@ public class ArticleServiceImpl implements ArticleService {
         // Article과 Tag들 연결 및 저장
         linkTagsToArticle(tags, article);
 
-
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
-    private List<TagEntity> saveTags(List<String> tags){
+    private List<TagEntity> saveTags(List<String> tags) {
         return tags.stream()
             .map(tag -> new TagEntity(tag))
             .collect(Collectors.toList());
     }
 
-    private void linkTagsToArticle(List<TagEntity> tags, ArticleEntity article){
+    private void linkTagsToArticle(List<TagEntity> tags, ArticleEntity article) {
         tags.forEach(tag -> {
             ArticleTag articleTag = new ArticleTag();
 
