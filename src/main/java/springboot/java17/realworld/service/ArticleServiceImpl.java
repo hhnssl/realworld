@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
+import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.entity.ArticleEntity;
@@ -78,15 +79,25 @@ public class ArticleServiceImpl implements ArticleService {
             articleList = articleRepository.findAllByOrderByCreatedAtDesc();
         }
 
-//        List<ArticleDto> articleDtoList = articleList.stream()
-//            .map(ArticleDto::fromEntity)
-//            .toList();
-//
-//        return MultipleArticlesResponseDto.builder()
-//            .articles(articleDtoList)
-//            .articlesCount(articleDtoList.size())
-//            .build();
-        return null;
+
+        List<ArticleDto> articleDtoList = new ArrayList<>();
+
+
+        for(ArticleEntity article: articleList){
+            List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
+            List<TagEntity> tags = new ArrayList<>();
+
+            for(ArticleTag articleTag: articleTags){
+                tags.add(articleTag.getTag());
+            }
+            articleDtoList.add(ArticleDto.fromEntity(article, tags));
+        }
+
+
+        return MultipleArticlesResponseDto.builder()
+            .articles(articleDtoList)
+            .articlesCount(articleDtoList.size())
+            .build();
     }
 
     @Override
