@@ -168,6 +168,13 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleEntity entity = articleRepository.findBySlug(slug)
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
+        List<ArticleTag> articleTagList = articleTagRepository.findAllByArticle(entity);
+
+        for (ArticleTag articleTag : articleTagList) {
+            articleTagRepository.delete(articleTag);
+            tagRepository.delete(articleTag.getTag());
+        }
+
         // 삭제
         articleRepository.deleteById(entity.getId());
     }
