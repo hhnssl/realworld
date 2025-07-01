@@ -2,6 +2,9 @@ server:
   port: 8888
 
 spring:
+  config:
+    activate:
+      on-profile: default
 
   h2:
     console:
@@ -30,6 +33,7 @@ spring:
     deserialization:
       unwrap-root-value: true
     # res
+
 #    serialization:
 #      wrap-root-value: true
 

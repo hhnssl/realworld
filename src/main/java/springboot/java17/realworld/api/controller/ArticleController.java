@@ -1,5 +1,7 @@
 package springboot.java17.realworld.api.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,11 +51,11 @@ public class ArticleController {
     }
 
     @PostMapping("")
-    public ResponseEntity<SingleArticleResponseDto> createArticle(@RequestBody() NewArticleRequestDto dto) {
+    public ResponseEntity<SingleArticleResponseDto> createArticle(@Valid @RequestBody() NewArticleRequestDto dto) {
 
         SingleArticleResponseDto articleDto = articleService.create(dto);
 
-        return ResponseEntity.ok(articleDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(articleDto);
     }
 
     @PutMapping("/{slug}")
