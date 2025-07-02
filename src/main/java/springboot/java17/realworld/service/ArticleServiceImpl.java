@@ -16,7 +16,6 @@ import springboot.java17.realworld.entity.TagEntity;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.ArticleRepository;
 import springboot.java17.realworld.repository.ArticleTagRepository;
-import springboot.java17.realworld.repository.TagRepository;
 import springboot.java17.realworld.repository.UserRepository;
 
 @Service
@@ -25,7 +24,8 @@ public class ArticleServiceImpl implements ArticleService {
     private final ArticleRepository articleRepository;
 
     private final ArticleTagRepository articleTagRepository;
-    private final TagRepository tagRepository;
+
+    private final TagService tagService;
     private final UserRepository userRepository;
 
     // Todo: Auth 구현 후 삭제
@@ -36,29 +36,23 @@ public class ArticleServiceImpl implements ArticleService {
         .build();
 
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, TagRepository tagRepository,
+    public ArticleServiceImpl(ArticleRepository articleRepository,
         UserRepository userRepository,
-        ArticleTagRepository articleTagRepository) {
+        ArticleTagRepository articleTagRepository,
+        TagService tagService) {
         this.articleRepository = articleRepository;
-        this.tagRepository = tagRepository;
         this.userRepository = userRepository;
         this.articleTagRepository = articleTagRepository;
+        this.tagService = tagService;
     }
 
     @Override
     public SingleArticleResponseDto getArticleBySlug(String slug) {
 
-        ArticleEntity article = articleRepository.findBySlug(slug)
+        ArticleEntity article = articleRepository.findBySlug(normalizeSlug(slug))
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
-        List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
-
-        List<TagEntity> tags = new ArrayList<>();
-
-        for(ArticleTag articleTag: articleTags){
-            tags.add(articleTag.getTag());
-        }
-
+        List<TagEntity> tags = extractTagsFromArticle(article);
 
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
@@ -79,20 +73,14 @@ public class ArticleServiceImpl implements ArticleService {
             articleList = articleRepository.findAllByOrderByCreatedAtDesc();
         }
 
-
         List<ArticleDto> articleDtoList = new ArrayList<>();
 
+        for (ArticleEntity article : articleList) {
 
-        for(ArticleEntity article: articleList){
-            List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
-            List<TagEntity> tags = new ArrayList<>();
+            List<TagEntity> tags = extractTagsFromArticle(article);
 
-            for(ArticleTag articleTag: articleTags){
-                tags.add(articleTag.getTag());
-            }
             articleDtoList.add(ArticleDto.fromEntity(article, tags));
         }
-
 
         return MultipleArticlesResponseDto.builder()
             .articles(articleDtoList)
@@ -113,8 +101,7 @@ public class ArticleServiceImpl implements ArticleService {
         articleRepository.save(article);
 
         // Tag 목록 저장
-        List<TagEntity> tags = saveTags(dto.getTagList());
-        tagRepository.saveAll(tags);
+        List<TagEntity> tags = tagService.saveAll(dto.getTagList());
 
         // Article과 Tag들 연결 및 저장
         linkTagsToArticle(tags, article);
@@ -122,11 +109,6 @@ public class ArticleServiceImpl implements ArticleService {
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
-    private List<TagEntity> saveTags(List<String> tags) {
-        return tags.stream()
-            .map(tag -> new TagEntity(tag))
-            .collect(Collectors.toList());
-    }
 
     private void linkTagsToArticle(List<TagEntity> tags, ArticleEntity article) {
         tags.forEach(tag -> {
@@ -142,7 +124,7 @@ public class ArticleServiceImpl implements ArticleService {
     public SingleArticleResponseDto updateArticleBySlug(String slug, UpdateArticleRequestDto dto) {
 
         // Todo: slug로 검색한 결과가 존재하지 않을 경우 예외 처리
-        ArticleEntity article = articleRepository.findBySlug(slug)
+        ArticleEntity article = articleRepository.findBySlug(normalizeSlug(slug))
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
         article.setSlug(dto.getTitle() == null ? article.getSlug() : dto.getTitle());
@@ -153,26 +135,23 @@ public class ArticleServiceImpl implements ArticleService {
 
         articleRepository.save(article);
 
-        List<ArticleTag> articleTags = articleTagRepository.findAllByArticle(article);
-        List<TagEntity> tags = new ArrayList<>();
-        for (ArticleTag articleTag : articleTags) {
-            tags.add(articleTag.getTag());
-        }
-
+        List<TagEntity> tags = extractTagsFromArticle(article);
 
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
+
     @Override
     @Transactional
     public void deleteArticleBySlug(String slug) {
-        ArticleEntity entity = articleRepository.findBySlug(slug)
+        ArticleEntity entity = articleRepository.findBySlug(normalizeSlug(slug))
             .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
 
         List<ArticleTag> articleTagList = articleTagRepository.findAllByArticle(entity);
 
         for (ArticleTag articleTag : articleTagList) {
             articleTagRepository.delete(articleTag);
-            tagRepository.delete(articleTag.getTag());
+
+            tagService.delete(articleTag.getTag());
         }
 
         // 삭제
@@ -201,5 +180,16 @@ public class ArticleServiceImpl implements ArticleService {
 //            .articlesCount(articleDtoList.size())
 //            .build();
         return null;
+    }
+
+    private String normalizeSlug(String slug) {
+        return slug.replaceAll(" ", "-");
+    }
+
+    private List<TagEntity> extractTagsFromArticle(ArticleEntity article) {
+        return articleTagRepository.findAllByArticle(article)
+            .stream()
+            .map(ArticleTag::getTag)
+            .collect(Collectors.toList());
     }
 }

@@ -1,5 +1,6 @@
 package springboot.java17.realworld.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +44,7 @@ public class ArticleEntity {
 
     private String slug;
 
+    @Column(unique = true)
     private String title;
 
     private String description;

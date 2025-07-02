@@ -33,7 +33,7 @@ public class NewArticleRequestDto {
     public ArticleEntity toEntity() {
         return ArticleEntity.builder()
             .title(title)
-            .slug(title)
+            .slug(title.replaceAll(" ", "-"))
             .description(description)
             .body(body)
             .build();
