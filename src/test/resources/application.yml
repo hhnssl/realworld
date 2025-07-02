@@ -24,8 +24,8 @@ spring:
 
   jackson:
     # req
-#    deserialization:
-#      unwrap-root-value: true
+    deserialization:
+      unwrap-root-value: true
     # res
     serialization:
       wrap-root-value: true

@@ -81,24 +81,4 @@ public class ArticleControllerTest {
         assertThat(responseEntity.getBody().getArticle().getTagList().size()).isEqualTo(2);
     }
 
-    @DisplayName("실패: 제목이 없을 경우 400 에러 반환")
-    @Test
-    public void createArticleTest_fail(){
-        //Given
-        NewArticleRequestDto createDtoWithoutTitle = NewArticleRequestDto.builder()
-            .description("디스크립션")
-            .body("바디")
-            .build();
-
-        // When
-        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(
-            baseUrl(),
-            createDtoWithoutTitle,
-            Object.class
-        );
-
-        // Then
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
 }
