@@ -9,15 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,7 +23,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import springboot.java17.realworld.service.UserDetailService;
+import springboot.java17.realworld.service.UserDetailsServiceImpl;
 
 @Slf4j
 @Configuration
@@ -36,7 +33,7 @@ public class WebSecurityConfig {
 
 //    private final CorsConfigurationSource corsConfigurationSource;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
-    private final UserDetailService userService;
+    private final UserDetailsServiceImpl userService;
 
     // 스프링 시큐리티 기능 비활성화
     @Bean
@@ -74,7 +71,7 @@ public class WebSecurityConfig {
     // 인증 관리자 관련 설정
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http,
-        BCryptPasswordEncoder bCryptPasswordEncoder, UserDetailService userService)
+        BCryptPasswordEncoder bCryptPasswordEncoder, UserDetailsServiceImpl userService)
         throws Exception {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService); // 사용자 정보 서비스 설정
