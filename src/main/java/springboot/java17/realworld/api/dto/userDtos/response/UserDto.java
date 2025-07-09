@@ -17,10 +17,10 @@ public class UserDto {
 
     private String image;
 
-    public static UserDto fromEntity(UserEntity user){
+    public static UserDto fromEntity(UserEntity user, String token){
         UserDto dto = UserDto.builder()
             .email(user.getEmail())
-            .token(null)
+            .token(token)
             .username(user.getUsername())
             .bio(user.getBio())
             .image(user.getImage())

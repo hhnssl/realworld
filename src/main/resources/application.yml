@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: 3000
 
 spring:
   config:
@@ -42,3 +42,7 @@ logging:
   level:
     org.hibernate.SQL: debug
   #  org.hibernate.type: trace
+
+jwt:
+  issuer: losnah5h@gmail.com
+  secret-key: thisisdevelop;lkfdsdvm,

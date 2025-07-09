@@ -4,6 +4,10 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
@@ -28,12 +32,6 @@ public class ArticleServiceImpl implements ArticleService {
     private final TagService tagService;
     private final UserRepository userRepository;
 
-    // Todo: Auth 구현 후 삭제
-    UserEntity testUSer = UserEntity.builder()
-        .email("user1@gmail.com")
-        .username("user1")
-        .password("password")
-        .build();
 
 
     public ArticleServiceImpl(ArticleRepository articleRepository,
@@ -92,10 +90,18 @@ public class ArticleServiceImpl implements ArticleService {
     public SingleArticleResponseDto create(NewArticleRequestDto dto) {
         ArticleEntity article = dto.toEntity();
 
-        // Todo: 현재 로그인한 유저의 정보로 변경할 것
-        userRepository.save(testUSer);
-        article.setUser(testUSer);
-        //
+        // 1. SecurityContext에서 인증 정보를 가져옴
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 2. 인증 정보에서 사용자의 이름(email)을 가져옴
+        String userEmail = authentication.getName();
+
+        // 3. 이메일을 사용하여 DB에서 실제 UserEntity를 조회
+        UserEntity currentUser = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
+
+        // 4. 조회한 UserEntity를 게시글의 작성자로 설정
+        article.setUser(currentUser);
 
         // Article 저장
         articleRepository.save(article);
