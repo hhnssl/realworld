@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto login(LoginUserRequestDto dto) {
         // 1. 사용자가 제출한 이메일과 비밀번호로 인증 토큰 생성
         UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPasswrod());
+            new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
 
         // 2. AuthenticationManager에 인증을 위임
         Authentication authentication = authenticationManager.authenticate(authenticationToken);

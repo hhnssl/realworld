@@ -13,7 +13,7 @@ public class LoginUserRequestDto {
 
     private String email;
 
-    private String passwrod;
+    private String password;
 
 
 }
