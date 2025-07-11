@@ -5,12 +5,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import springboot.java17.realworld.api.dto.userDtos.request.LoginUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.request.NewUserRequestDto;
+import springboot.java17.realworld.api.dto.userDtos.request.UpdateUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
 import springboot.java17.realworld.service.UserService;
 
@@ -39,6 +40,13 @@ public class UserController {
     @GetMapping("/user")
     public ResponseEntity<UserResponseDto> getCurrentUser(){
         UserResponseDto userDto = userService.findUser();
+
+        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+    }
+
+    @PutMapping("/user")
+    public ResponseEntity<UserResponseDto> updateUser(@RequestBody UpdateUserRequestDto dto){
+        UserResponseDto userDto = userService.updateUser(dto);
 
         return ResponseEntity.status(HttpStatus.OK).body(userDto);
     }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import springboot.java17.realworld.api.dto.userDtos.request.LoginUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.request.NewUserRequestDto;
+import springboot.java17.realworld.api.dto.userDtos.request.UpdateUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
 import springboot.java17.realworld.config.jwt.TokenProvider;
 import springboot.java17.realworld.entity.UserEntity;
@@ -86,6 +87,29 @@ public class UserServiceImpl implements UserService {
             UserEntity userEntity = userRepository.findByEmail(user.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException(""));
             return UserResponseDto.fromEntity(userEntity, null);
+        }
+
+        return null;
+    }
+
+    public UserResponseDto updateUser(UpdateUserRequestDto dto) {
+        UserDetails userDetails;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            userDetails = (UserDetails) authentication.getPrincipal();
+
+            UserEntity user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException(""));
+
+            user.setUsername(dto.getUsername() == null ? user.getUsername() : dto.getUsername());
+            user.setPassword(dto.getPassword() == null ? user.getPassword() : passwordEncoder.encode(dto.getPassword()));
+            user.setImage(dto.getImage() == null ? user.getImage() : dto.getImage());
+            user.setBio(dto.getBio() == null ? user.getBio() : dto.getBio());
+
+            userRepository.save(user);
+
+            return UserResponseDto.fromEntity(user, null);
         }
 
         return null;
