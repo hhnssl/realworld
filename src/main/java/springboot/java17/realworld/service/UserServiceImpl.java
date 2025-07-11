@@ -1,12 +1,12 @@
 package springboot.java17.realworld.service;
 
 
-import io.jsonwebtoken.Jwts;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import springboot.java17.realworld.api.dto.userDtos.request.LoginUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.request.NewUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
-import springboot.java17.realworld.config.jwt.JwtProperties;
 import springboot.java17.realworld.config.jwt.TokenProvider;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.UserRepository;
@@ -75,5 +74,20 @@ public class UserServiceImpl implements UserService {
         String token = tokenProvider.generateToken(user, Duration.ofHours(2));
 
         return UserResponseDto.fromEntity(user, token);
+    }
+
+    public UserResponseDto findUser() {
+        UserDetails user;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            user = (UserDetails) authentication.getPrincipal();
+
+            UserEntity userEntity = userRepository.findByEmail(user.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException(""));
+            return UserResponseDto.fromEntity(userEntity, null);
+        }
+
+        return null;
     }
 }

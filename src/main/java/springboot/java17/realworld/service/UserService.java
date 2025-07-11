@@ -12,4 +12,6 @@ public interface UserService {
     UserEntity findById(Long userId);
 
     UserResponseDto login(LoginUserRequestDto dto);
+
+    UserResponseDto findUser();
 }

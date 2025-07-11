@@ -82,7 +82,7 @@ public class TokenProvider {
 
         User user = new User(claims.getSubject(), "", authorities);
 
-        return new UsernamePasswordAuthenticationToken(user, token, authorities        );
+        return new UsernamePasswordAuthenticationToken(user, token, authorities);
     }
 
     // 토큰 기반으로 유저 아이디를 가져오는 메서드
