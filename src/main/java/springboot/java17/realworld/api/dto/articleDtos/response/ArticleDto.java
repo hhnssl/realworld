@@ -38,7 +38,7 @@ public class ArticleDto {
                 .title(article.getTitle())
                 .description(article.getDescription())
                 .body(article.getBody())
-                .author(ProfileDto.fromEntity(article.getUser()))
+                .author(ProfileDto.fromEntity(article.getUser(), false))
                 .createdAt(article.getCreatedAt())
                 .updatedAt(article.getUpdatedAt())
                 .favorited(null) //Todo

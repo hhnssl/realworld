@@ -21,12 +21,12 @@ public class ProfileDto {
 
     private boolean following = false;
 
-    public static ProfileDto fromEntity(UserEntity entity) {
+    public static ProfileDto fromEntity(UserEntity entity, boolean isFollowing) {
         return ProfileDto.builder()
             .username(entity.getUsername())
             .bio(entity.getBio())
             .image(entity.getImage())
-            .following(false)
+            .following(isFollowing)
             .build();
     }
 }

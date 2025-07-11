@@ -14,9 +14,9 @@ public class ProfileResponseDto {
 
     private ProfileDto profile;
 
-    public static ProfileResponseDto fromEntity(UserEntity entity) {
+    public static ProfileResponseDto fromEntity(UserEntity entity, boolean isFollowing) {
         return ProfileResponseDto.builder()
-            .profile(ProfileDto.fromEntity(entity))
+            .profile(ProfileDto.fromEntity(entity, isFollowing))
             .build();
     }
 }
