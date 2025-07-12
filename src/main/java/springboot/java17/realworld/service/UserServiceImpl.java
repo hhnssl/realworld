@@ -2,6 +2,7 @@ package springboot.java17.realworld.service;
 
 
 import java.time.Duration;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -84,28 +85,22 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    @Transactional
     public UserResponseDto updateUser(UpdateUserRequestDto dto) {
-        UserDetails userDetails;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserEntity currentUser = findCurrentUser();
 
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            userDetails = (UserDetails) authentication.getPrincipal();
+        // 4. 엔티티 내부에 업데이트 로직 위임
+        currentUser.update(
+            dto.getUsername(),
+            Optional.ofNullable(dto.getPassword()).map(passwordEncoder::encode).orElse(null),
+            dto.getImage(),
+            dto.getBio()
+        );
 
-            UserEntity user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException(""));
+        String newToken = tokenProvider.generateToken(currentUser, Duration.ofHours(2));
 
-            user.setUsername(dto.getUsername() == null ? user.getUsername() : dto.getUsername());
-            user.setPassword(dto.getPassword() == null ? user.getPassword()
-                : passwordEncoder.encode(dto.getPassword()));
-            user.setImage(dto.getImage() == null ? user.getImage() : dto.getImage());
-            user.setBio(dto.getBio() == null ? user.getBio() : dto.getBio());
-
-            userRepository.save(user);
-
-            return UserResponseDto.fromEntity(user, null);
-        }
-
-        return null;
+        return UserResponseDto.fromEntity(currentUser, newToken);
     }
 
     private UserEntity findCurrentUser() {

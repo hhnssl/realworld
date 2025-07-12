@@ -37,4 +37,11 @@ public class UserEntity {
     private String bio;
 
     private String role;
+
+    public void update(String username, String encodedPassword, String image, String bio) {
+        if (username != null) this.username = username;
+        if (encodedPassword != null) this.password = encodedPassword;
+        if (image != null) this.image = image;
+        if (bio != null) this.bio = bio;
+    }
 }
