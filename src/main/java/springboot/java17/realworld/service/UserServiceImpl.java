@@ -32,19 +32,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto save(NewUserRequestDto dto) {
-        // 1. DTO를 바탕으로 UserEntity 생성 및 비밀번호 암호화
+    public UserResponseDto register(NewUserRequestDto dto) {
         UserEntity user = UserEntity.builder()
             .username(dto.getUsername())
             .email(dto.getEmail())
             .password(passwordEncoder.encode(dto.getPassword()))
-            .role("ROLE_USER")
+            .role("ROLE_USER") //TODO: enum
             .build();
 
-        // 2. DB에 사용자 저장
         userRepository.save(user);
 
-        // 3. 회원가입 직후 바로 토큰을 발급
+        // 회원가입 직후 바로 토큰 발급
         String token = tokenProvider.generateToken(user, Duration.ofHours(2));
 
         return UserResponseDto.fromEntity(user, token);

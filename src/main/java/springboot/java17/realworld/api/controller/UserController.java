@@ -25,10 +25,10 @@ public class UserController {
 
 
     @PostMapping("/users")
-    public ResponseEntity<UserResponseDto> signUp(@RequestBody NewUserRequestDto requestDto) {
-        UserResponseDto userDto = userService.save(requestDto);
+    public ResponseEntity<UserResponseDto> signUp(@Valid @RequestBody NewUserRequestDto request) {
+        UserResponseDto response = userService.register(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/users/login")

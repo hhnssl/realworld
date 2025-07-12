@@ -8,7 +8,7 @@ import springboot.java17.realworld.entity.UserEntity;
 
 public interface UserService {
 
-    UserResponseDto save(NewUserRequestDto dto);
+    UserResponseDto register(NewUserRequestDto dto);
 
     UserEntity findById(Long userId);
 
