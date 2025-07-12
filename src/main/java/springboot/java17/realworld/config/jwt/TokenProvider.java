@@ -20,6 +20,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.entity.UserEntity;
+import springboot.java17.realworld.service.CustomUserDetails;
 
 @Slf4j
 @Service
@@ -81,9 +82,15 @@ public class TokenProvider {
         Set<SimpleGrantedAuthority> authorities = Collections.singleton(
             new SimpleGrantedAuthority(role));
 
-        User user = new User(claims.getSubject(), "", authorities);
+        UserEntity userEntity = UserEntity.builder()
+            .id(claims.get("id", Long.class))
+            .email(claims.getSubject()) // 'sub' 클레임은 이메일
+            .role(role)
+            .build();
 
-        return new UsernamePasswordAuthenticationToken(user, token, authorities);
+        CustomUserDetails userDetails = new CustomUserDetails(userEntity);
+
+        return new UsernamePasswordAuthenticationToken(userDetails, token, authorities);
     }
 
     // 토큰 기반으로 유저 아이디를 가져오는 메서드

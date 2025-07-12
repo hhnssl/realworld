@@ -9,5 +9,7 @@ import springboot.java17.realworld.entity.UserEntity;
 
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
 
-    FollowEntity findFollowingByUser(UserEntity user);
+    boolean existsByUserAndFollowing(UserEntity user, UserEntity following);
+
+    void deleteFollowEntityByFollowingAndUser(UserEntity following, UserEntity user);
 }
