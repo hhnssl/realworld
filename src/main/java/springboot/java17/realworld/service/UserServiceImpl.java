@@ -20,6 +20,7 @@ import springboot.java17.realworld.config.jwt.TokenProvider;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @RequiredArgsConstructor
 @Service
@@ -76,19 +77,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public UserResponseDto findUser() {
-        UserDetails user;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public UserResponseDto getCurrentUser() {
+        UserEntity currentUser = findCurrentUser();
 
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            user = (UserDetails) authentication.getPrincipal();
+        return UserResponseDto.fromEntity(currentUser, null); // TODO: 토큰 발급할 필요 있는지 확인할 것
 
-            UserEntity userEntity = userRepository.findByEmail(user.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException(""));
-            return UserResponseDto.fromEntity(userEntity, null);
-        }
-
-        return null;
     }
 
     public UserResponseDto updateUser(UpdateUserRequestDto dto) {
@@ -113,5 +106,15 @@ public class UserServiceImpl implements UserService {
         }
 
         return null;
+    }
+
+    private UserEntity findCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new BadCredentialsException("인증 정보가 없습니다.");
+        }
+        return userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new UsernameNotFoundException(
+                "User not found with email: " + authentication.getName()));
     }
 }

@@ -17,9 +17,7 @@ import springboot.java17.realworld.config.jwt.TokenProvider;
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenProvider tokenProvider;
-
     private final static String HEADER_AUTHORIZATION = "Authorization";
-
     private final static String TOKEN_PREFIX = "Bearer ";
 
 
@@ -29,15 +27,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String authorizationHeader = request.getHeader(HEADER_AUTHORIZATION);
         String token = getAccessToken(authorizationHeader);
 
-        // 가져온 토큰이 유효한지 확인하고 유효한 때는 인증 정보 설정
-        // 토큰이 존재하고 유효한 경우에만 인증 정보 설정
         if (token != null && tokenProvider.validToken(token)) {
             Authentication authentication = tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // 토큰이 유효하지 않거나 || 토큰이 없거나 || Bearer로 시작하지 않으면
-        // 아무것도 하지 않고 다음 필터로 요청 넘기기
         filterChain.doFilter(request, response);
     }
 

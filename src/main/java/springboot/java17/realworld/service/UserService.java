@@ -14,7 +14,7 @@ public interface UserService {
 
     UserResponseDto login(LoginUserRequestDto dto);
 
-    UserResponseDto findUser();
+    UserResponseDto getCurrentUser();
 
     UserResponseDto updateUser(UpdateUserRequestDto dto);
 }

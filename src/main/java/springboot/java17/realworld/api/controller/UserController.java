@@ -40,9 +40,9 @@ public class UserController {
 
     @GetMapping("/user")
     public ResponseEntity<UserResponseDto> getCurrentUser(){
-        UserResponseDto userDto = userService.findUser();
+        UserResponseDto response = userService.getCurrentUser();
 
-        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PutMapping("/user")
