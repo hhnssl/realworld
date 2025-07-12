@@ -1,5 +1,6 @@
 package springboot.java17.realworld.api.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +32,10 @@ public class UserController {
     }
 
     @PostMapping("/users/login")
-    public ResponseEntity<UserResponseDto> signIn( @RequestBody LoginUserRequestDto request) {
-        UserResponseDto userDto = userService.login(request);
+    public ResponseEntity<UserResponseDto> signIn(@Valid @RequestBody LoginUserRequestDto request) {
+        UserResponseDto response = userService.login(request);
 
-        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/user")

@@ -76,9 +76,10 @@ public class TokenProvider {
     // 토큰 기반으로 인증 정보를 가져오는 메서드
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
+        String role = claims.get("auth", String.class);
 
         Set<SimpleGrantedAuthority> authorities = Collections.singleton(
-            new SimpleGrantedAuthority("ROLE_USER"));
+            new SimpleGrantedAuthority(role));
 
         User user = new User(claims.getSubject(), "", authorities);
 
@@ -97,7 +98,4 @@ public class TokenProvider {
             .getBody();
     }
 
-    public String getUsernameFromToken(String token) {
-        return getClaims(token).getSubject();
-    }
 }
