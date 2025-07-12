@@ -35,6 +35,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto register(NewUserRequestDto dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalStateException("이미 사용 중인 이메일입니다.");
+        }
+
         UserEntity user = UserEntity.builder()
             .username(dto.getUsername())
             .email(dto.getEmail())
