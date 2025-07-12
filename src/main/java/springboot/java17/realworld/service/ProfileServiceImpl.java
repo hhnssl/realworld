@@ -42,53 +42,55 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public ProfileResponseDto followProfileByUsername(String username) {
-        UserEntity followingUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+    @Transactional
+    public ProfileResponseDto followProfileByUsername(String currentUserEmail,
+        String usernameToFollow) {
+        UserEntity currentUser = findUserByEmail(currentUserEmail);
+        UserEntity userToFollow = findUserByUsername(usernameToFollow);
 
-        UserDetails userDetails;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            userDetails = (UserDetails) authentication.getPrincipal();
-
-            UserEntity user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException(""));
-
-            // user의 팔로우 목록에 추가하기
-            FollowEntity follow = FollowEntity.builder()
-                .user(user)
-                .following(followingUser)
-                .build();
-
-            followRepository.save(follow);
-
-            return ProfileResponseDto.fromEntity(followingUser, true);
+        // 셀프 팔로우 금지
+        if (currentUser.getId().equals(userToFollow.getId())) {
+            throw new IllegalArgumentException("You cannot follow yourself.");
         }
 
-        return null;
+        // 이미 팔로우하고 있는지 확인
+        if (followRepository.existsByUserAndFollowing(currentUser, userToFollow)) {
+            // 이미 팔로우 중이라면, 추가 작업 없이 현재 프로필 상태를 그대로 반환
+            return ProfileResponseDto.fromEntity(userToFollow, true);
+        }
+
+        // Follow 관계 생성 및 저장
+        FollowEntity follow = FollowEntity.builder()
+            .user(currentUser)
+            .following(userToFollow)
+            .build();
+        followRepository.save(follow);
+
+        return ProfileResponseDto.fromEntity(userToFollow, true);
     }
 
     @Transactional
     @Override
-    public ProfileResponseDto unfollowProfileByUsername(String username) {
-        UserEntity followingUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+    public ProfileResponseDto unfollowProfileByUsername(String currentUserEmail, String usernameToUnfollow) {
+        UserEntity currentUser = findUserByEmail(currentUserEmail);
+        UserEntity userToFollow = findUserByUsername(usernameToUnfollow);
 
-        UserDetails userDetails;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Follow 관계 삭제
+        followRepository.deleteByUserAndFollowing(currentUser, userToFollow);
 
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            userDetails = (UserDetails) authentication.getPrincipal();
+        return ProfileResponseDto.fromEntity(userToFollow, false);
+    }
 
-            UserEntity user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException(""));
+    // 유틸리티 메서드로 분리하여 코드 가독성 향상
+    private UserEntity findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(
+                () -> new UsernameNotFoundException("Follower not found with email: " + email));
+    }
 
-            followRepository.deleteFollowEntityByFollowingAndUser(followingUser, user);
-
-            return ProfileResponseDto.fromEntity(followingUser, false);
-        }
-
-        return null;
+    private UserEntity findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                "User to follow not found with username: " + username));
     }
 }

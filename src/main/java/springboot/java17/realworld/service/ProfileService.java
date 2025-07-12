@@ -6,8 +6,8 @@ public interface ProfileService {
 
     ProfileResponseDto getProfileByUsername(String username);
 
-    ProfileResponseDto followProfileByUsername(String username);
+    ProfileResponseDto followProfileByUsername(String currentUserEmail, String usernameToFollow);
 
-    ProfileResponseDto unfollowProfileByUsername(String username);
+    ProfileResponseDto unfollowProfileByUsername(String currentUserEmail, String usernameToUnfollow);
 
 }
