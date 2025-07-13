@@ -1,14 +1,19 @@
 package springboot.java17.realworld.service;
 
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
@@ -16,184 +21,164 @@ import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticles
 import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
 import springboot.java17.realworld.entity.ArticleEntity;
 import springboot.java17.realworld.entity.ArticleTag;
+import springboot.java17.realworld.entity.FollowEntity;
 import springboot.java17.realworld.entity.TagEntity;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.ArticleRepository;
 import springboot.java17.realworld.repository.ArticleTagRepository;
+import springboot.java17.realworld.repository.FollowRepository;
 import springboot.java17.realworld.repository.UserRepository;
 
+@RequiredArgsConstructor
 @Service
 public class ArticleServiceImpl implements ArticleService {
 
+
     private final ArticleRepository articleRepository;
-
     private final ArticleTagRepository articleTagRepository;
-
     private final TagService tagService;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
 
-
-
-    public ArticleServiceImpl(ArticleRepository articleRepository,
-        UserRepository userRepository,
-        ArticleTagRepository articleTagRepository,
-        TagService tagService) {
-        this.articleRepository = articleRepository;
-        this.userRepository = userRepository;
-        this.articleTagRepository = articleTagRepository;
-        this.tagService = tagService;
-    }
 
     @Override
+    @Transactional(readOnly = true)
     public SingleArticleResponseDto getArticleBySlug(String slug) {
-
-        ArticleEntity article = articleRepository.findBySlug(normalizeSlug(slug))
-            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+        ArticleEntity article = findArticleBySlug(slug);
 
         List<TagEntity> tags = extractTagsFromArticle(article);
 
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
+
     @Override
+    @Transactional(readOnly = true)
     public MultipleArticlesResponseDto getAllArticles(String author, String tag) {
         List<ArticleEntity> articleList;
 
-        if (!author.isEmpty()) {
-            // Todo
+        if (author != null && !author.isEmpty()) {
             UserEntity user = userRepository.findByUsername(author)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 username 입니다."));
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 username 입니다."));
 
-            articleList = articleRepository.findAllByUser(user);
-        } else if (!tag.isEmpty()) {
-            articleList = articleRepository.findAllByOrderByCreatedAtDesc();
+            articleList = articleRepository.findAllByUserWithDetails(user);
+        } else if (tag != null && !tag.isEmpty()) {
+            articleList = articleRepository.findAllByTag(tag);
         } else {
-            articleList = articleRepository.findAllByOrderByCreatedAtDesc();
+            articleList = articleRepository.findAllWithDetails();
         }
 
-        List<ArticleDto> articleDtoList = new ArrayList<>();
+        List<ArticleDto> articleDtoList = articleList.stream()
+            .map(article -> ArticleDto.fromEntity(article, extractTagsFromArticle(article)))
+            .collect(Collectors.toList());
 
-        for (ArticleEntity article : articleList) {
-
-            List<TagEntity> tags = extractTagsFromArticle(article);
-
-            articleDtoList.add(ArticleDto.fromEntity(article, tags));
-        }
-
-        return MultipleArticlesResponseDto.builder()
-            .articles(articleDtoList)
-            .articlesCount(articleDtoList.size())
-            .build();
+        return new MultipleArticlesResponseDto(articleDtoList, articleDtoList.size());
     }
 
     @Override
+    @Transactional
     public SingleArticleResponseDto create(NewArticleRequestDto dto) {
+        UserEntity currentUser = getCurrentUser();
         ArticleEntity article = dto.toEntity();
+        article.setAuthor(currentUser);
 
-        // 1. SecurityContext에서 인증 정보를 가져옴
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // 2. 인증 정보에서 사용자의 이름(email)을 가져옴
-        String userEmail = authentication.getName();
-
-        // 3. 이메일을 사용하여 DB에서 실제 UserEntity를 조회
-        UserEntity currentUser = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-
-        // 4. 조회한 UserEntity를 게시글의 작성자로 설정
-        article.setUser(currentUser);
-
-        // Article 저장
+        // Article 저장 (이때 @PrePersist에 의해 slug 자동 생성됨)
         articleRepository.save(article);
 
-        // Tag 목록 저장
+        // Tag 저장 및 연결
         List<TagEntity> tags = tagService.saveAll(dto.getTagList());
-
-        // Article과 Tag들 연결 및 저장
         linkTagsToArticle(tags, article);
 
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
 
-    private void linkTagsToArticle(List<TagEntity> tags, ArticleEntity article) {
-        tags.forEach(tag -> {
-            ArticleTag articleTag = new ArticleTag();
-
-            articleTag.setArticle(article);
-            articleTag.setTag(tag);
-            articleTagRepository.save(articleTag);
-        });
-    }
-
     @Override
+    @Transactional
     public SingleArticleResponseDto updateArticleBySlug(String slug, UpdateArticleRequestDto dto) {
+        ArticleEntity article = findArticleBySlug(slug);
 
-        // Todo: slug로 검색한 결과가 존재하지 않을 경우 예외 처리
-        ArticleEntity article = articleRepository.findBySlug(normalizeSlug(slug))
-            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+        if (!article.getUser().equals(getCurrentUser())) {
+            throw new AccessDeniedException("이 게시글을 수정할 권한이 없습니다.");
+        }
 
-        article.setSlug(dto.getTitle() == null ? article.getSlug() : dto.getTitle());
-        article.setTitle(dto.getTitle() == null ? article.getSlug() : dto.getTitle());
-        article.setDescription(
-            dto.getDescription() == null ? article.getDescription() : dto.getDescription());
-        article.setBody(dto.getBody() == null ? article.getBody() : dto.getBody());
-
+        article.update(dto.getTitle(), dto.getDescription(), dto.getBody());
         articleRepository.save(article);
 
         List<TagEntity> tags = extractTagsFromArticle(article);
-
         return SingleArticleResponseDto.fromEntity(article, tags);
     }
 
     @Override
     @Transactional
     public void deleteArticleBySlug(String slug) {
-        ArticleEntity entity = articleRepository.findBySlug(normalizeSlug(slug))
-            .orElseThrow(() -> new IllegalArgumentException("검색 결과 없음"));
+        ArticleEntity article = findArticleBySlug(slug);
 
-        List<ArticleTag> articleTagList = articleTagRepository.findAllByArticle(entity);
-
-        for (ArticleTag articleTag : articleTagList) {
-            articleTagRepository.delete(articleTag);
-
-            tagService.delete(articleTag.getTag());
+        if (!article.getUser().equals(getCurrentUser())) {
+            throw new AccessDeniedException("이 게시글을 삭제할 권한이 없습니다.");
         }
 
-        // 삭제
-        articleRepository.deleteById(entity.getId());
+        // 연관된 ArticleTag를 먼저 삭제
+        articleTagRepository.deleteAll(article.getArticleTags());
+
+        articleRepository.delete(article);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MultipleArticlesResponseDto getFeedArticles() {
-        UserEntity me = userRepository.findByUsername("dataUser")
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        // 1. 현재 인증된 사용자 조회
+        UserEntity currentUser = getCurrentUser();
 
-        // me가 팔로우하고 있는 목록
-//        List<FollowEntity> followings = followService.getFollowingList(me);
+        // 2. 현재 사용자가 팔로우하는 모든 관계 조회
+        List<FollowEntity> followings = followRepository.findAllByFollower(currentUser);
 
-//        List<List<ArticleEntity>> obj = followings.stream()
-//            .map(item -> articleRepository.findAllByUser(item.getFollowing()))
-//            .toList();
+        // 3. 만약 팔로우하는 사람이 없다면 빈 피드 반환
+        if (followings.isEmpty()) {
+            return new MultipleArticlesResponseDto(Collections.emptyList(), 0);
+        }
 
-//        List<ArticleDto> articleDtoList = obj.stream()
-//            .flatMap(List::stream)
-//            .map(ArticleDto::fromEntity)
-//            .collect(Collectors.toList());
-//
-//        return MultipleArticlesResponseDto.builder()
-//            .articles(articleDtoList)
-//            .articlesCount(articleDtoList.size())
-//            .build();
-        return null;
+        // 4. 팔로우하는 작성자 목록 추출
+        List<UserEntity> followedAuthors = followings.stream()
+            .map(FollowEntity::getFollowing)
+            .collect(Collectors.toList());
+
+        // 5. 팔로우하는 모든 작성자의 게시글을 최신순으로 한 번에 조회
+        List<ArticleEntity> feedArticles = articleRepository.findArticlesByAuthors(followedAuthors);
+
+        // 6. DTO로 변환하여 반환
+        List<ArticleDto> articleDtoList = feedArticles.stream()
+            .map(article -> ArticleDto.fromEntity(article, extractTagsFromArticle(article)))
+            .collect(Collectors.toList());
+
+        return new MultipleArticlesResponseDto(articleDtoList, articleDtoList.size());
     }
 
-    private String normalizeSlug(String slug) {
-        return slug.replaceAll(" ", "-");
+    private UserEntity getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String userEmail = authentication.getName();
+
+        return userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new UsernameNotFoundException("인증된 사용자를 찾을 수 없습니다: " + userEmail));
+    }
+
+    private ArticleEntity findArticleBySlug(String slug) {
+        return articleRepository.findBySlug(slug)
+            .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다: " + slug));
+    }
+
+    private void linkTagsToArticle(List<TagEntity> tags, ArticleEntity article) {
+        tags.forEach(tag -> {
+            ArticleTag articleTag = new ArticleTag();
+            articleTag.setArticle(article);
+            articleTag.setTag(tag);
+            articleTagRepository.save(articleTag);
+        });
     }
 
     private List<TagEntity> extractTagsFromArticle(ArticleEntity article) {
-        return articleTagRepository.findAllByArticle(article)
+        return article.getArticleTags()
             .stream()
             .map(ArticleTag::getTag)
             .collect(Collectors.toList());

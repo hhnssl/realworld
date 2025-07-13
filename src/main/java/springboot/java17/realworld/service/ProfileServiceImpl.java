@@ -1,9 +1,9 @@
 package springboot.java17.realworld.service;
 
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,45 +23,35 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional(readOnly = true)
     public ProfileResponseDto getProfileByUsername(String username) {
-        UserEntity profileOwner = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다: " + username));
+        UserEntity profileOwner = findUserByUsername(username);
 
-        boolean isFollowing = false;
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // 토큰이 있을 경우
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            UserEntity currentUser = userDetails.getUser();
-
-            isFollowing = followRepository.existsByUserAndFollowing(currentUser, profileOwner);
-        }
+        boolean isFollowing = getCurrentUser()
+            .map(currentUser -> followRepository.existsByFollowerAndFollowing(currentUser,
+                profileOwner))
+            .orElse(false); // 비로그인 사용자는 항상 false
 
         return ProfileResponseDto.fromEntity(profileOwner, isFollowing);
     }
 
     @Override
     @Transactional
-    public ProfileResponseDto followProfileByUsername(String currentUserEmail,
-        String usernameToFollow) {
-        UserEntity currentUser = findUserByEmail(currentUserEmail);
+    public ProfileResponseDto followProfileByUsername(String usernameToFollow) {
+        UserEntity currentUser = getCurrentUser()
+            .orElseThrow(() -> new UsernameNotFoundException("로그인이 필요한 기능입니다."));
         UserEntity userToFollow = findUserByUsername(usernameToFollow);
 
         // 셀프 팔로우 금지
         if (currentUser.getId().equals(userToFollow.getId())) {
-            throw new IllegalArgumentException("You cannot follow yourself.");
+            throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
         }
 
-        // 이미 팔로우하고 있는지 확인
-        if (followRepository.existsByUserAndFollowing(currentUser, userToFollow)) {
-            // 이미 팔로우 중이라면, 추가 작업 없이 현재 프로필 상태를 그대로 반환
+        if (followRepository.existsByFollowerAndFollowing(currentUser, userToFollow)) {
+            // 이미 팔로우 중이면 현재 상태 그대로 반환
             return ProfileResponseDto.fromEntity(userToFollow, true);
         }
 
-        // Follow 관계 생성 및 저장
         FollowEntity follow = FollowEntity.builder()
-            .user(currentUser)
+            .follower(currentUser)
             .following(userToFollow)
             .build();
         followRepository.save(follow);
@@ -69,28 +59,31 @@ public class ProfileServiceImpl implements ProfileService {
         return ProfileResponseDto.fromEntity(userToFollow, true);
     }
 
-    @Transactional
     @Override
-    public ProfileResponseDto unfollowProfileByUsername(String currentUserEmail, String usernameToUnfollow) {
-        UserEntity currentUser = findUserByEmail(currentUserEmail);
-        UserEntity userToFollow = findUserByUsername(usernameToUnfollow);
+    @Transactional
+    public ProfileResponseDto unfollowProfileByUsername(String usernameToUnfollow) {
+        UserEntity currentUser = getCurrentUser()
+            .orElseThrow(() -> new UsernameNotFoundException("로그인이 필요한 기능입니다."));
+        UserEntity userToUnfollow = findUserByUsername(usernameToUnfollow);
 
-        // Follow 관계 삭제
-        followRepository.deleteByUserAndFollowing(currentUser, userToFollow);
+        followRepository.deleteByFollowerAndFollowing(currentUser, userToUnfollow);
 
-        return ProfileResponseDto.fromEntity(userToFollow, false);
+        return ProfileResponseDto.fromEntity(userToUnfollow, false);
     }
 
-    // 유틸리티 메서드로 분리하여 코드 가독성 향상
-    private UserEntity findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-            .orElseThrow(
-                () -> new UsernameNotFoundException("Follower not found with email: " + email));
+
+    private Optional<UserEntity> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(
+            authentication.getPrincipal())) {
+            return java.util.Optional.empty();
+        }
+        String userEmail = authentication.getName();
+        return userRepository.findByEmail(userEmail);
     }
 
     private UserEntity findUserByUsername(String username) {
         return userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException(
-                "User to follow not found with username: " + username));
+            .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
     }
 }

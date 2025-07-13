@@ -1,15 +1,15 @@
 package springboot.java17.realworld.service;
 
-
+import jakarta.persistence.EntityNotFoundException; // 예외 타입 변경
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +20,6 @@ import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
 import springboot.java17.realworld.config.jwt.TokenProvider;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.UserRepository;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @RequiredArgsConstructor
 @Service
@@ -36,84 +34,87 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDto register(NewUserRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalStateException("이미 사용 중인 이메일입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new IllegalArgumentException("이미 사용 중인 사용자 이름입니다.");
         }
 
         UserEntity user = UserEntity.builder()
             .username(dto.getUsername())
             .email(dto.getEmail())
             .password(passwordEncoder.encode(dto.getPassword()))
-            .role("ROLE_USER") //TODO: enum
+            .role("ROLE_USER")
             .build();
-
         userRepository.save(user);
 
-        // 회원가입 직후 바로 토큰 발급
         String token = tokenProvider.generateToken(user, Duration.ofHours(2));
-
+        
         return UserResponseDto.fromEntity(user, token);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserEntity findById(Long userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("Unexpected user with id: " + userId));
     }
 
     @Override
     @Transactional
     public UserResponseDto login(LoginUserRequestDto dto) {
         try {
-            // 1. 인증 시도
             UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
             Authentication authentication = authenticationManager.authenticate(authToken);
 
-            // 2. 인증 성공시 JWT 생성
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            UserEntity user = userDetails.getUser();
+            UserEntity user = ((CustomUserDetails) authentication.getPrincipal()).getUser();
             String token = tokenProvider.generateToken(user, Duration.ofHours(2));
 
             return UserResponseDto.fromEntity(user, token);
         } catch (AuthenticationException e) {
-            // 3. 인증 실패 시 예외 발생
             throw new BadCredentialsException("이메일 또는 비밀번호가 맞지 않습니다.");
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public UserResponseDto getCurrentUser() {
-        UserEntity currentUser = findCurrentUser();
+        UserEntity currentUser = getCurrentUserEntity()
+            .orElseThrow(() -> new BadCredentialsException("인증 정보가 없습니다."));
 
-        return UserResponseDto.fromEntity(currentUser, null); // TODO: 토큰 발급할 필요 있는지 확인할 것
-
+        // 개선점: 현재 사용자 조회 시에는 토큰을 재발급할 필요가 거의 없으므로 null 또는 기존 토큰 전달
+        // TODO: 만약 헤더에서 토큰을 추출할 수 있다면 그 토큰을 그대로 전달하기
+        return UserResponseDto.fromEntity(currentUser, null);
     }
 
     @Override
     @Transactional
     public UserResponseDto updateUser(UpdateUserRequestDto dto) {
-        UserEntity currentUser = findCurrentUser();
+        UserEntity currentUser = getCurrentUserEntity()
+            .orElseThrow(() -> new BadCredentialsException("인증 정보가 없습니다."));
 
-        // 4. 엔티티 내부에 업데이트 로직 위임
-        currentUser.update(
-            dto.getUsername(),
-            Optional.ofNullable(dto.getPassword()).map(passwordEncoder::encode).orElse(null),
-            dto.getImage(),
-            dto.getBio()
-        );
+        // 비밀번호가 null이 아닐 경우에만 인코딩하여 업데이트
+        String encodedPassword = Optional.ofNullable(dto.getPassword())
+            .filter(p -> !p.isBlank()) // 비어있지 않은 경우에만
+            .map(passwordEncoder::encode)
+            .orElse(currentUser.getPassword()); // 아니면 기존 비밀번호 유지
+
+        currentUser.update(dto.getUsername(), encodedPassword, dto.getImage(), dto.getBio());
 
         String newToken = tokenProvider.generateToken(currentUser, Duration.ofHours(2));
 
         return UserResponseDto.fromEntity(currentUser, newToken);
     }
 
-    private UserEntity findCurrentUser() {
+
+    private Optional<UserEntity> getCurrentUserEntity() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getName() == null) {
-            throw new BadCredentialsException("인증 정보가 없습니다.");
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(
+            authentication.getPrincipal())) {
+            return Optional.empty();
         }
-        return userRepository.findByEmail(authentication.getName())
-            .orElseThrow(() -> new UsernameNotFoundException(
-                "User not found with email: " + authentication.getName()));
+        String userEmail = authentication.getName();
+        return userRepository.findByEmail(userEmail);
     }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public UserEntity findById(Long userId) {
+//        return userRepository.findById(userId)
+//            .orElseThrow(() -> new EntityNotFoundException("ID에 해당하는 사용자를 찾을 수 없습니다: " + userId));
+//    }
 }

@@ -10,8 +10,6 @@ public interface UserService {
 
     UserResponseDto register(NewUserRequestDto dto);
 
-    UserEntity findById(Long userId);
-
     UserResponseDto login(LoginUserRequestDto dto);
 
     UserResponseDto getCurrentUser();

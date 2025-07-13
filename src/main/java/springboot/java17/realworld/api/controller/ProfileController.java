@@ -3,7 +3,6 @@ package springboot.java17.realworld.api.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +20,6 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-
     @GetMapping("/{username}")
     public ResponseEntity<ProfileResponseDto> getUserProfile(
         @PathVariable("username") String username) {
@@ -32,20 +30,21 @@ public class ProfileController {
     }
 
     @PostMapping("/{username}/follow")
-    public ResponseEntity<ProfileResponseDto> followUser(@PathVariable("username") String username,
+    public ResponseEntity<ProfileResponseDto> followUser(
+        @PathVariable("username") String username,
         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ProfileResponseDto response = profileService.followProfileByUsername(
-            userDetails.getUsername(), username);
+        ProfileResponseDto response = profileService.followProfileByUsername(username);
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{username}/follow")
-    public ResponseEntity<ProfileResponseDto> unfollowUser(@PathVariable("username") String username,
-        @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ProfileResponseDto> unfollowUser(
+        @PathVariable("username") String username,
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ProfileResponseDto response = profileService.unfollowProfileByUsername(userDetails.getUsername(), username);
+        ProfileResponseDto response = profileService.unfollowProfileByUsername(username);
 
         return ResponseEntity.ok(response);
     }
