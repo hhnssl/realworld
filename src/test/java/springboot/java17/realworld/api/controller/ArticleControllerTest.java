@@ -2,14 +2,10 @@ package springboot.java17.realworld.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,25 +16,22 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
-import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
-import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.SingleArticleResponseDto;
-import springboot.java17.realworld.entity.ArticleEntity;
+import springboot.java17.realworld.api.dto.userDtos.request.NewUserRequestDto;
+import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
 import springboot.java17.realworld.repository.ArticleRepository;
-import springboot.java17.realworld.repository.TagRepository;
-import springboot.java17.realworld.repository.UserRepository;
+import springboot.java17.realworld.service.UserService;
 
-// 1. 실제 서버를 띄우고 테스트하는 통합 테스트 환경 설정
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-public class ArticleControllerTest {
+class ArticleControllerTest {
+
 
     @LocalServerPort
     protected int port;
+
     @Autowired
     protected TestRestTemplate restTemplate;
 
@@ -46,39 +39,66 @@ public class ArticleControllerTest {
     protected ArticleRepository articleRepository;
 
     @Autowired
-    protected TagRepository tagRepository;
+    protected UserService userService;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+    private String jwtToken;
+
 
     private String baseUrl() {
         return "http://localhost:" + port + "/api/articles";
     }
 
-    @DisplayName("성공: 아티클 생성")
+    @BeforeEach
+    void setUp() {
+        NewUserRequestDto request = NewUserRequestDto.builder()
+            .username("username")
+            .email("username@gmail.com")
+            .password("usernamepassword")
+            .build();
+
+        UserResponseDto response = userService.register(request);
+        this.jwtToken = response.getUser().getToken();
+
+
+    }
+
+    @DisplayName("성공 - 게시글 작성")
     @Test
     public void createArticleTest() {
         // Given
+        objectMapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, false);
+        long beforeCount = articleRepository.count();
+
         NewArticleRequestDto createDto = NewArticleRequestDto.builder()
-            .title("타이틀")
-            .description("디스크립션")
-            .body("바디")
-            .tagList(List.of("태그1", "태그2"))
+            .title("테스트 코드 작성하기")
+            .description("테스트 코드를 작성해봅시다.")
+            .body("테스트 코드를 작성하는 방법은요...")
+            .tagList(List.of("junit5", "테스트코드"))
             .build();
 
 
-        // When
-        ResponseEntity<SingleArticleResponseDto> responseEntity = restTemplate.postForEntity(
-            baseUrl(),
-            createDto,
-            SingleArticleResponseDto.class
-        );
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(this.jwtToken);
 
+        HttpEntity<NewArticleRequestDto> request = new HttpEntity<>(createDto, headers);
+
+        // When
+        ResponseEntity<SingleArticleResponseDto> responseEntity = restTemplate.exchange(
+            baseUrl(),
+            HttpMethod.POST,
+            request,
+            SingleArticleResponseDto.class);
 
         // Then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseEntity.getBody()).isNotNull();
-        assertThat(responseEntity.getBody().getArticle().getTitle()).isEqualTo("타이틀");
-        assertThat(responseEntity.getBody().getArticle().getDescription()).isEqualTo("디스크립션");
-        assertThat(responseEntity.getBody().getArticle().getTagList().get(0)).isEqualTo("태그1");
+        assertThat(responseEntity.getBody().getArticle().getTitle()).isEqualTo("테스트 코드 작성하기");
+        assertThat(responseEntity.getBody().getArticle().getDescription()).isEqualTo("테스트 코드를 작성해봅시다.");
         assertThat(responseEntity.getBody().getArticle().getTagList().size()).isEqualTo(2);
+        assertThat(articleRepository.count()).isEqualTo(beforeCount + 1);
     }
 
 }
