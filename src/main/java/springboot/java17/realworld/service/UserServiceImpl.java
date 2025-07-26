@@ -28,8 +28,8 @@ import springboot.java17.realworld.repository.UserRepository;
 public class UserServiceImpl implements UserService {
 
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
 
     @Override
@@ -78,7 +78,6 @@ public class UserServiceImpl implements UserService {
         UserEntity currentUser = getCurrentUserEntity()
             .orElseThrow(() -> new UserNotAuthenticatedException("인증 정보가 없습니다."));
 
-        // TODO: 만약 헤더에서 토큰을 추출할 수 있다면 그 토큰을 그대로 전달하기
         return UserResponseDto.fromEntity(currentUser, null);
     }
 
@@ -109,13 +108,7 @@ public class UserServiceImpl implements UserService {
             return Optional.empty();
         }
         String userEmail = authentication.getName();
+
         return userRepository.findByEmail(userEmail);
     }
-
-//    @Override
-//    @Transactional(readOnly = true)
-//    public UserEntity findById(Long userId) {
-//        return userRepository.findById(userId)
-//            .orElseThrow(() -> new EntityNotFoundException("ID에 해당하는 사용자를 찾을 수 없습니다: " + userId));
-//    }
 }

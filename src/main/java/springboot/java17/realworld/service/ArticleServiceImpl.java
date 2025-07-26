@@ -1,7 +1,6 @@
 package springboot.java17.realworld.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,11 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import springboot.java17.realworld.api.dto.articleDtos.request.ArticleFilterOptions;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.ArticleDto;
@@ -34,11 +32,11 @@ import springboot.java17.realworld.repository.UserRepository;
 public class ArticleServiceImpl implements ArticleService {
 
 
-    private final ArticleRepository articleRepository;
     private final ArticleTagRepository articleTagRepository;
-    private final TagService tagService;
-    private final UserRepository userRepository;
+    private final ArticleRepository articleRepository;
     private final FollowRepository followRepository;
+    private final UserRepository userRepository;
+    private final TagService tagService;
 
 
     @Override
@@ -54,16 +52,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     @Transactional(readOnly = true)
-    public MultipleArticlesResponseDto getAllArticles(String author, String tag) {
+    public MultipleArticlesResponseDto getAllArticles(ArticleFilterOptions filter) {
         List<ArticleEntity> articleList;
 
-        if (author != null && !author.isEmpty()) {
-            UserEntity user = userRepository.findByUsername(author)
+        if (filter.getAuthor() != null && !filter.getAuthor().isEmpty()) {
+            UserEntity user = userRepository.findByUsername(filter.getAuthor())
                 .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 username 입니다."));
 
             articleList = articleRepository.findAllByUserWithDetails(user);
-        } else if (tag != null && !tag.isEmpty()) {
-            articleList = articleRepository.findAllByTag(tag);
+        } else if (filter.getTag() != null && !filter.getTag().isEmpty()) {
+            articleList = articleRepository.findAllByTag(filter.getTag());
         } else {
             articleList = articleRepository.findAllWithDetails();
         }
@@ -82,7 +80,7 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleEntity article = dto.toEntity();
         article.setAuthor(currentUser);
 
-        // Article 저장 (이때 @PrePersist에 의해 slug 자동 생성됨)
+        // Article 저장
         articleRepository.save(article);
 
         // Tag 저장 및 연결

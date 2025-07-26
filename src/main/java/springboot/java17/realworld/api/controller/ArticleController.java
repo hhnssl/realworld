@@ -10,7 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import springboot.java17.realworld.api.dto.articleDtos.request.ArticleFilterOptions;
 import springboot.java17.realworld.api.dto.articleDtos.request.NewArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.request.UpdateArticleRequestDto;
 import springboot.java17.realworld.api.dto.articleDtos.response.MultipleArticlesResponseDto;
@@ -35,11 +43,9 @@ public class ArticleController {
     }
 
     @GetMapping
-    public ResponseEntity<MultipleArticlesResponseDto> listArticles(
-        @RequestParam(name = "author", required = false, defaultValue = "") String author,
-        @RequestParam(name = "tag", required = false, defaultValue = "") String tag) {
+    public ResponseEntity<MultipleArticlesResponseDto> listArticles(ArticleFilterOptions filter) {
 
-        MultipleArticlesResponseDto response = articleService.getAllArticles(author, tag);
+        MultipleArticlesResponseDto response = articleService.getAllArticles(filter);
 
         return ResponseEntity.ok(response);
     }
