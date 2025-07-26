@@ -17,6 +17,47 @@ import org.springframework.web.context.request.WebRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(DuplicatedEmailException.class)
+    public ResponseEntity<ErrorMessage> handleDuplicatedEmailException(DuplicatedEmailException e,
+        WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.BAD_REQUEST.value(),
+            new Date(),
+            e.getMessage(),
+            request.getDescription(false)
+        );
+        log.error("DuplicatedEmailException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DuplicatedUsernameException.class)
+    public ResponseEntity<ErrorMessage> handleDuplicatedUsernameException(DuplicatedUsernameException e,
+        WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.BAD_REQUEST.value(),
+            new Date(),
+            e.getMessage(),
+            request.getDescription(false)
+        );
+        log.error("DuplicatedUsernameException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotAuthenticatedException.class)
+    public ResponseEntity<ErrorMessage> handleUserNotAuthenticatedException(UserNotAuthenticatedException e,
+        WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.BAD_REQUEST.value(),
+            new Date(),
+            e.getMessage(),
+            request.getDescription(false)
+        );
+        log.error("UserNotAuthenticatedException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorMessage> handleIllegalArgumentException(IllegalArgumentException e,
@@ -33,6 +74,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
 
+
+    /* 인증/인가 관련*/
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorMessage> handleExpiredJwtException(ExpiredJwtException e,
+        WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.UNAUTHORIZED.value(), // 401
+            new Date(),
+            "토큰이 만료되었습니다. 다시 로그인해주세요.",
+            request.getDescription(false)
+        );
+
+        log.error("ExpiredJwtException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
+    }
 
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -51,6 +108,7 @@ public class GlobalExceptionHandler {
     }
 
 
+    /* DB 관련 */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorMessage> handleEntityNotFoundException(EntityNotFoundException e,
         WebRequest request) {
@@ -63,12 +121,12 @@ public class GlobalExceptionHandler {
 
         log.error("EntityNotFoundException", e);
 
-
         return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorMessage> handleUsernameNotFoundException(UsernameNotFoundException e, WebRequest request) {
+    public ResponseEntity<ErrorMessage> handleUsernameNotFoundException(UsernameNotFoundException e,
+        WebRequest request) {
         ErrorMessage message = new ErrorMessage(
             HttpStatus.NOT_FOUND.value(), // 404
             new Date(),
@@ -78,12 +136,12 @@ public class GlobalExceptionHandler {
 
         log.error("UsernameNotFoundException", e);
 
-
         return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorMessage> handleDataIntegrityViolationException(DataIntegrityViolationException e, WebRequest request) {
+    public ResponseEntity<ErrorMessage> handleDataIntegrityViolationException(
+        DataIntegrityViolationException e, WebRequest request) {
         ErrorMessage message = new ErrorMessage(
             HttpStatus.CONFLICT.value(), // 409
             new Date(),
@@ -93,38 +151,21 @@ public class GlobalExceptionHandler {
 
         log.error("DataIntegrityViolationException", e);
 
-
         return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<ErrorMessage> handleExpiredJwtException(ExpiredJwtException e, WebRequest request) {
-        ErrorMessage message = new ErrorMessage(
-            HttpStatus.UNAUTHORIZED.value(), // 401
-            new Date(),
-            "토큰이 만료되었습니다. 다시 로그인해주세요.",
-            request.getDescription(false)
-        );
 
-        log.error("ExpiredJwtException", e);
-
-
-        return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
-    }
-
-
-
+    /* 500번대 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> handleGlobalException(Exception e, WebRequest request) {
         ErrorMessage message = new ErrorMessage(
             HttpStatus.INTERNAL_SERVER_ERROR.value(), // 500
             new Date(),
-            "서버 내부 오류가 발생했습니다.", // 실제 에러 메시지(e.getMessage())를 노출하지 않는 것이 보안상 좋습니다.
+            "서버 내부 오류가 발생했습니다.",
             request.getDescription(false)
         );
 
         log.error("Exception", e);
-
 
         return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }

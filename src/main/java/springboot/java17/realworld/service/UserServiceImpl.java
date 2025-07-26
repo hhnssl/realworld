@@ -1,6 +1,5 @@
 package springboot.java17.realworld.service;
 
-import jakarta.persistence.EntityNotFoundException; // 예외 타입 변경
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,9 @@ import springboot.java17.realworld.api.dto.userDtos.request.LoginUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.request.NewUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.request.UpdateUserRequestDto;
 import springboot.java17.realworld.api.dto.userDtos.response.UserResponseDto;
+import springboot.java17.realworld.api.exception.DuplicatedEmailException;
+import springboot.java17.realworld.api.exception.DuplicatedUsernameException;
+import springboot.java17.realworld.api.exception.UserNotAuthenticatedException;
 import springboot.java17.realworld.config.jwt.TokenProvider;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.UserRepository;
@@ -34,10 +36,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDto register(NewUserRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new DuplicatedEmailException("이미 사용 중인 이메일입니다.");
         }
         if (userRepository.existsByUsername(dto.getUsername())) {
-            throw new IllegalArgumentException("이미 사용 중인 사용자 이름입니다.");
+            throw new DuplicatedUsernameException("이미 사용 중인 사용자 이름입니다.");
         }
 
         UserEntity user = UserEntity.builder()
@@ -74,9 +76,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponseDto getCurrentUser() {
         UserEntity currentUser = getCurrentUserEntity()
-            .orElseThrow(() -> new BadCredentialsException("인증 정보가 없습니다."));
+            .orElseThrow(() -> new UserNotAuthenticatedException("인증 정보가 없습니다."));
 
-        // 개선점: 현재 사용자 조회 시에는 토큰을 재발급할 필요가 거의 없으므로 null 또는 기존 토큰 전달
         // TODO: 만약 헤더에서 토큰을 추출할 수 있다면 그 토큰을 그대로 전달하기
         return UserResponseDto.fromEntity(currentUser, null);
     }
@@ -85,7 +86,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDto updateUser(UpdateUserRequestDto dto) {
         UserEntity currentUser = getCurrentUserEntity()
-            .orElseThrow(() -> new BadCredentialsException("인증 정보가 없습니다."));
+            .orElseThrow(() -> new UserNotAuthenticatedException("인증 정보가 없습니다."));
 
         // 비밀번호가 null이 아닐 경우에만 인코딩하여 업데이트
         String encodedPassword = Optional.ofNullable(dto.getPassword())
