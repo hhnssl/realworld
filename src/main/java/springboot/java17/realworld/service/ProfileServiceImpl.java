@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import springboot.java17.realworld.api.dto.profileDtos.response.ProfileResponseDto;
+import springboot.java17.realworld.api.exception.UserNotAuthenticatedException;
 import springboot.java17.realworld.entity.FollowEntity;
 import springboot.java17.realworld.entity.UserEntity;
 import springboot.java17.realworld.repository.FollowRepository;
@@ -17,8 +18,8 @@ import springboot.java17.realworld.repository.UserRepository;
 @Service
 public class ProfileServiceImpl implements ProfileService {
 
-    private final UserRepository userRepository;
     private final FollowRepository followRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional
     public ProfileResponseDto followProfileByUsername(String usernameToFollow) {
         UserEntity currentUser = getCurrentUser()
-            .orElseThrow(() -> new UsernameNotFoundException("로그인이 필요한 기능입니다."));
+            .orElseThrow(() -> new UserNotAuthenticatedException("로그인이 필요한 기능입니다."));
         UserEntity userToFollow = findUserByUsername(usernameToFollow);
 
         // 셀프 팔로우 금지
@@ -63,7 +64,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional
     public ProfileResponseDto unfollowProfileByUsername(String usernameToUnfollow) {
         UserEntity currentUser = getCurrentUser()
-            .orElseThrow(() -> new UsernameNotFoundException("로그인이 필요한 기능입니다."));
+            .orElseThrow(() -> new UserNotAuthenticatedException("로그인이 필요한 기능입니다."));
         UserEntity userToUnfollow = findUserByUsername(usernameToUnfollow);
 
         followRepository.deleteByFollowerAndFollowing(currentUser, userToUnfollow);
