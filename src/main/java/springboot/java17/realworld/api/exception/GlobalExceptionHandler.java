@@ -59,6 +59,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
 
+
+    @ExceptionHandler(ArticleNotFoundException.class)
+    public ResponseEntity<ErrorMessage> handleArticleNotFoundException(ArticleNotFoundException e,
+        WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.BAD_REQUEST.value(),
+            new Date(),
+            e.getMessage(),
+            request.getDescription(false)
+        );
+        log.error("ArticleNotFoundException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorMessage> handleIllegalArgumentException(IllegalArgumentException e,
         WebRequest request) {

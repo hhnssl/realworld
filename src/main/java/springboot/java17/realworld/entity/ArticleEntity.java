@@ -40,7 +40,6 @@ public class ArticleEntity {
     @Column(nullable = false, length = 1000)
     private String description;
 
-    // TEXT 타입으로 지정하여 긴 글도 저장 가능하도록 함
     @Column(nullable = false, columnDefinition = "TEXT")
     private String body;
 
