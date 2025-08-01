@@ -6,6 +6,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -35,18 +36,16 @@ public class CommentEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private Long userId;
+    @ManyToOne
+    private UserEntity user;
 
-    private Long articleId;
+    @ManyToOne
+    private ArticleEntity article;
 
     @Builder
-    public CommentEntity(Long id, String body, LocalDateTime createdAt, LocalDateTime updatedAt,
-        Long userId, Long articleId) {
-        this.id = id;
+    public CommentEntity(String body, UserEntity user, ArticleEntity article) {
         this.body = body;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.userId = userId;
-        this.articleId = articleId;
+        this.user = user;
+        this.article = article;
     }
 }
