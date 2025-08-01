@@ -1,11 +1,13 @@
 package springboot.java17.realworld.service;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import springboot.java17.realworld.api.dto.commentDtos.request.NewCommentRequest;
+import springboot.java17.realworld.api.dto.commentDtos.response.CommentDto;
 import springboot.java17.realworld.api.dto.commentDtos.response.MultipleCommentsResponse;
 import springboot.java17.realworld.api.dto.commentDtos.response.SingleCommentResponse;
 import springboot.java17.realworld.api.dto.profileDtos.response.ProfileDto;
@@ -46,9 +48,20 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public MultipleCommentsResponse findAllComments(String slug) {
+        ArticleEntity targetArticle = getCurrentArticle(slug);
 
-        return null;
+        List<CommentEntity> comments = commentRepository.findAllByArticle(targetArticle);
+
+        boolean isFollowing = false;
+
+        List<CommentDto> commentDtoList = comments.stream()
+            .map(comment -> CommentDto.fromEntity(comment,
+                ProfileDto.fromEntity(comment.getUser(), isFollowing)))
+            .toList();
+
+        return new MultipleCommentsResponse(commentDtoList);
     }
+
 
     /**/
     private Optional<UserEntity> getCurrentUser() {

@@ -89,48 +89,4 @@ public class ArticleController {
 
         return ResponseEntity.ok(response);
     }
-
-    // 임시
-    @GetMapping("/{slug}/comments")
-    public String getComments_temp(@PathVariable("slug") String slug) throws Exception {
-
-        return test();
-    }
-
-    private String test() throws Exception {
-        // ObjectMapper 인스턴스 생성
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        // 1. author 객체를 Map으로 생성
-        // 순서를 보장하기 위해 LinkedHashMap 사용 (선택 사항)
-        Map<String, Object> author = new LinkedHashMap<>();
-        author.put("username", "jake");
-        author.put("bio", "I work at statefarm");
-        author.put("image", "https://i.stack.imgur.com/xHWG8.jpg");
-        author.put("following", false);
-
-        // 2. comment 객체를 Map으로 생성
-        Map<String, Object> comment = new LinkedHashMap<>();
-        comment.put("id", 1);
-        comment.put("createdAt", "2016-02-18T03:22:56.637Z");
-        comment.put("updatedAt", "2016-02-18T03:22:56.637Z");
-        comment.put("body", "It takes a Jacobian");
-        comment.put("author", author); // author 맵을 값으로 추가
-
-        // 3. comments 배열을 List로 생성
-        List<Map<String, Object>> commentsList = new ArrayList<>();
-        commentsList.add(comment);
-
-        // 4. 최상위 루트 객체를 Map으로 생성
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("comments", commentsList);
-
-        // ObjectMapper를 사용하여 Map을 JSON 문자열로 변환
-        // writerWithDefaultPrettyPrinter()를 사용하면 보기 좋게 출력됩니다.
-        String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
-
-        return jsonString;
-    }
-
-
 }
