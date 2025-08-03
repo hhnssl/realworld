@@ -53,11 +53,10 @@ class ArticleControllerTest {
 
     @BeforeEach
     void setUp() {
-        NewUserRequestDto request = NewUserRequestDto.builder()
-            .username("username")
-            .email("username@gmail.com")
-            .password("usernamepassword")
-            .build();
+        NewUserRequestDto request = new NewUserRequestDto();
+        request.setUsername("testuser");
+        request.setEmail("testuset@gmail.com");
+        request.setPassword("testpw");
 
         UserResponseDto response = userService.register(request);
         this.jwtToken = response.getUser().getToken();
