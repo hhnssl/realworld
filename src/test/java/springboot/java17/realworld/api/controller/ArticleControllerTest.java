@@ -53,7 +53,7 @@ class ArticleControllerTest {
 
     @BeforeEach
     void setUp() {
-        NewUserRequestDto request = new NewUserRequestDto();//
+        NewUserRequestDto request = new NewUserRequestDto();
         request.setUsername("testuser");
         request.setEmail("testuset@gmail.com");
         request.setPassword("testpw");
