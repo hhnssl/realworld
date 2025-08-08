@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -165,6 +166,21 @@ public class GlobalExceptionHandler {
         );
 
         log.error("DataIntegrityViolationException", e);
+
+        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorMessage> handleMethodArgumentNotValidException(
+        MethodArgumentNotValidException e, WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+            HttpStatus.NOT_FOUND.value(), // 404
+            new Date(),
+            e.getBindingResult().getAllErrors().get(0).getDefaultMessage(),
+            request.getDescription(false)
+        );
+
+        log.error("MethodArgumentNotValidException", e);
 
         return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
